@@ -1,0 +1,12 @@
+Excellence System® - Atualização V34
+
+Ajustes realizados:
+- Tela inicial do cliente ficou mais limpa.
+- Adicionado card de diagnóstico inicial quando 4.1 e/ou 4.2 ainda não foram respondidos.
+- O cliente responde 4.1 e 4.2 juntos em uma única tela.
+- Adicionadas opções: Ver ISO completa e ISO por tópicos.
+- 4.2 recebeu exemplos de preenchimento para reduzir dúvidas.
+- Mantidas as permissões atuais do Firebase.
+
+Versão: 20260707-34
+Cache: excellence-system-20260707-34

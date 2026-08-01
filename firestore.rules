@@ -1,0 +1,150 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    function usuarioPath(uid) {
+      return /databases/$(database)/documents/usuarios/$(uid);
+    }
+
+    function convitePath(email) {
+      return /databases/$(database)/documents/convites_acesso/$(email);
+    }
+
+    function temPerfil() {
+      return logado() && exists(usuarioPath(request.auth.uid));
+    }
+
+    function meuUsuario() {
+      return get(usuarioPath(request.auth.uid));
+    }
+
+    function souAdmin() {
+      return temPerfil()
+        && meuUsuario().data.tipo == "admin"
+        && meuUsuario().data.ativo == true;
+    }
+
+    function souCliente() {
+      return temPerfil()
+        && meuUsuario().data.tipo == "cliente"
+        && meuUsuario().data.ativo == true;
+    }
+
+    function minhaEmpresa() {
+      return meuUsuario().data.empresaId;
+    }
+
+    function podeAtivarPerfilPorConvite(userId) {
+      return logado()
+        && request.auth.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && exists(convitePath(request.resource.data.email))
+        && get(convitePath(request.resource.data.email)).data.ativo == true
+        && get(convitePath(request.resource.data.email)).data.email == request.auth.token.email
+        && get(convitePath(request.resource.data.email)).data.tipo == request.resource.data.tipo
+        && get(convitePath(request.resource.data.email)).data.empresaId == request.resource.data.empresaId
+        && request.resource.data.ativo == true;
+    }
+
+    match /usuarios/{userId} {
+      allow get: if souAdmin() || (logado() && request.auth.uid == userId);
+      allow list: if souAdmin();
+      allow create: if souAdmin() || podeAtivarPerfilPorConvite(userId);
+      allow update, delete: if souAdmin();
+    }
+
+    match /convites_acesso/{emailId} {
+      allow get: if souAdmin() || logado();
+      allow list: if souAdmin();
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /empresas/{empresaId} {
+      allow get, list: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /respostas_iso/{respostaId} {
+      // O cliente precisa conseguir abrir uma etapa mesmo quando a resposta ainda não existe.
+      // Por isso o get é liberado pelo prefixo do ID: empresaId_requisitoId.
+      allow get: if souAdmin() || (
+        souCliente()
+        && respostaId.matches('^' + minhaEmpresa() + '_.*$')
+      );
+
+      // Para listagens/consultas, o acesso continua restrito à própria empresa.
+      allow list: if souAdmin() || (
+        souCliente()
+        && resource.data.empresaId == minhaEmpresa()
+      );
+
+      allow create: if souAdmin() || (
+        souCliente()
+        && request.resource.data.empresaId == minhaEmpresa()
+        && request.resource.data.requisitoId in ["4_1", "4_2"]
+      );
+
+      allow update: if souAdmin() || (
+        souCliente()
+        && resource.data.empresaId == minhaEmpresa()
+        && request.resource.data.empresaId == minhaEmpresa()
+        && request.resource.data.requisitoId in ["4_1", "4_2"]
+        && !(resource.data.status in ["concluido", "aprovado"])
+      );
+
+      allow delete: if souAdmin();
+    }
+
+    // Nova coleção central de arquivos do Excellence System®.
+    // categoria: material_apoio | empresa | consultoria
+    match /arquivos/{arquivoId} {
+      allow read: if souAdmin() || (
+        souCliente() && (
+          (resource.data.categoria == "material_apoio" && resource.data.publico == true) ||
+          (resource.data.empresaId == minhaEmpresa())
+        )
+      );
+
+      // Apenas a administração cria arquivos.
+      // Clientes visualizam materiais/arquivos e preenchem somente as respostas de 4.1 e 4.2.
+      allow create, update, delete: if souAdmin();
+    }
+
+    // Ecossistema documental por empresa: pastas e itens com PDF, Word ou link.
+    match /empresa_pastas/{pastaId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /empresa_recursos/{recursoId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
+    // Coleções antigas mantidas apenas para compatibilidade com arquivos já enviados.
+    match /materiais_apoio/{materialId} {
+      allow read: if souAdmin() || (
+        souCliente() && (
+          resource.data.publico == true ||
+          resource.data.empresaId == minhaEmpresa()
+        )
+      );
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /anexos_empresa/{anexoId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

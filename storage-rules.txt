@@ -1,0 +1,101 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    function usuarioPath() {
+      return /databases/(default)/documents/usuarios/$(request.auth.uid);
+    }
+
+    function temPerfil() {
+      return logado() && firestore.exists(usuarioPath());
+    }
+
+    function meuUsuario() {
+      return firestore.get(usuarioPath()).data;
+    }
+
+    function souAdmin() {
+      return temPerfil() && meuUsuario().tipo == "admin" && meuUsuario().ativo == true;
+    }
+
+    function souCliente() {
+      return temPerfil() && meuUsuario().tipo == "cliente" && meuUsuario().ativo == true;
+    }
+
+    function minhaEmpresa() {
+      return meuUsuario().empresaId;
+    }
+
+    function tamanhoPermitido() {
+      return request.resource.size < 30 * 1024 * 1024;
+    }
+
+    function tipoArquivoPermitido() {
+      return request.resource.contentType == "application/pdf"
+        || request.resource.contentType == "application/msword"
+        || request.resource.contentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        || request.resource.contentType == "application/octet-stream";
+    }
+
+    function uploadPermitido() {
+      return souAdmin() && tamanhoPermitido() && tipoArquivoPermitido();
+    }
+
+    // Cofre interno da administração: materiais avulsos que não devem aparecer para clientes.
+    match /cofre-admin/{allPaths=**} {
+      allow read: if souAdmin();
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    // Materiais gerais de apoio: modelos, exemplos, ISO completa e orientações liberadas pela administração.
+    match /materiais-apoio/{allPaths=**} {
+      allow read: if temPerfil();
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    // Caminho legado de materiais por empresa. A nova lógica mantém material de apoio no cofre da administração.
+    match /empresas/{empresaId}/materiais-apoio/{allPaths=**} {
+      allow read, write: if souAdmin();
+    }
+
+    // Ecossistema documental da empresa: pastas internas com PDF/Word enviados pela administração.
+    match /empresas/{empresaId}/ecossistema/{allPaths=**} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    // Caminho antigo de documentos/evidências da empresa.
+    // A empresa não envia arquivos pelo sistema; uploads ficam sob responsabilidade da administração.
+    match /empresas/{empresaId}/documentos-empresa/{allPaths=**} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    // Arquivos que a consultoria devolve para a empresa: corrigidos, aprovados ou personalizados.
+    match /empresas/{empresaId}/consultoria/{allPaths=**} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    // Caminho antigo de evidências, mantido para leitura de arquivos legados.
+    match /empresas/{empresaId}/{requisitoId}/evidencias/{allPaths=**} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update: if uploadPermitido();
+      allow delete: if souAdmin();
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

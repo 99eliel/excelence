@@ -1,0 +1,6 @@
+Versão 20260801-41
+
+Ajuste no ecossistema documental da empresa:
+- A tela mostra apenas o botão Criar pasta.
+- Os campos Nome da pasta, Descrição e Ordem só aparecem após clicar em Criar pasta.
+- Após criar pasta ou item, o sistema permanece no ecossistema da empresa.

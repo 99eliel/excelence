@@ -1,0 +1,10 @@
+Atualização V28 - Arquivos recebidos por setor ISO
+
+A área "Arquivos recebidos" agora organiza os documentos por requisito/setor ISO.
+Exemplo: 4.1 - Entendendo a Organização e seu Contexto.
+
+Cada arquivo também exibe a identificação do setor ISO junto dos dados do arquivo,
+mantendo as opções Ver PDF, Baixar PDF e Baixar Word.
+
+Versão: 20260707-28
+Cache: excellence-system-20260707-28

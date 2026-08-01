@@ -1,0 +1,12 @@
+Excellence System® - Versão 20260801-40
+
+Ajustes principais:
+- Aba Empresa reorganizada em áreas separadas: Gestão ISO, Ecossistema documental, Usuários vinculados e Dados da empresa.
+- O Ecossistema documental não aparece mais misturado com as etapas ISO.
+- A Gestão ISO agora fica focada em respostas, status e comentários.
+- Arquivos PDF/Word e links da empresa devem ser enviados no Ecossistema documental.
+- Material de apoio foi tratado como Cofre de Materiais exclusivo da administração.
+- Removida a lógica de material de apoio específico por empresa dentro da tela de empresa.
+
+Versão: 20260801-40
+Cache: excellence-system-20260801-40

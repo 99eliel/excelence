@@ -1,0 +1,15 @@
+ATUALIZAÇÃO V30 - CORREÇÃO DO UPDATE INFINITO
+
+Problema encontrado:
+- O index.html e o pwa.js estavam com versão 20260707-28.
+- O sw.js e o version.json estavam com versão 20260707-29.
+- Essa diferença fazia o sistema acreditar que sempre existia uma nova versão, causando recarregamento infinito.
+
+Correção feita:
+- Todas as referências foram sincronizadas para 20260707-30.
+- O pwa.js agora recarrega no máximo uma vez por versão.
+- O intervalo de verificação foi aumentado para 10 minutos.
+- O sistema limpa caches antigos sem entrar em loop.
+
+Versão: 20260707-30
+Cache: excellence-system-20260707-30

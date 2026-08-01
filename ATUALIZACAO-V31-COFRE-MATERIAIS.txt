@@ -1,0 +1,10 @@
+ATUALIZAÇÃO V31 - COFRE DE MATERIAIS DE APOIO
+
+- A tela Materiais de apoio virou um cofre exclusivo da administração.
+- O formulário não fica mais aberto o tempo todo. Agora existe o botão + Adicionar material.
+- Foi adicionada uma barra de busca por título, descrição, setor ISO, arquivo e visibilidade.
+- A administração pode salvar material vinculado a um requisito ISO.
+- A administração pode salvar material avulso, sem vínculo com requisito ISO.
+- Materiais avulsos ficam no cofre interno da administração.
+- Materiais ISO continuam podendo aparecer dentro das etapas, conforme visibilidade.
+- Versionamento atualizado para 20260707-31.

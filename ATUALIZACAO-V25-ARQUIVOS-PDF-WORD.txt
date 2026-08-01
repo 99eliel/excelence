@@ -1,0 +1,17 @@
+Excellence System® - V25
+
+Atualização dos arquivos:
+- A administração agora pode cadastrar arquivos com duas versões:
+  1. PDF: usado para visualizar e baixar.
+  2. Word: usado para baixar o documento editável.
+
+Na visualização do cliente e do admin, cada arquivo passa a mostrar até 3 ações:
+- Ver PDF
+- Baixar PDF
+- Baixar Word
+
+Observações:
+- A versão em PDF é obrigatória nos novos cadastros.
+- A versão em Word é opcional; quando não for enviada, o botão Baixar Word não aparece.
+- Arquivos antigos continuam funcionando como arquivos legados usando o link antigo como PDF.
+- As regras do Firebase continuam no pacote em firestore-rules.txt e storage-rules.txt.

@@ -1,0 +1,13 @@
+ATUALIZAÇÃO V38 - AGENDA ADMINISTRATIVA
+
+- Adicionada aba Agenda exclusiva para admin.
+- O app chama a Cloud Function getAgendaMarcia.
+- A função lê o link iCal da agenda da Márcia sem expor esse link no front-end.
+- A tela mostra compromissos dos próximos 7, 30 ou 60 dias.
+- Incluído botão Atualizar agenda.
+- Versionamento: 20260801-38.
+
+Para testar:
+1. Configure functions/.env com MARCIA_CALENDAR_ICS_URL.
+2. Rode: firebase deploy --only functions --project excellence-system
+3. Rode: firebase deploy --only hosting --project excellence-system

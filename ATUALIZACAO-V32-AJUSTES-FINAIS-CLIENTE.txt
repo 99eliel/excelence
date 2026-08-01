@@ -1,0 +1,10 @@
+Excellence System® - Atualização V32
+
+Alterações:
+- Nas etapas 4.1 e 4.2, o botão do cliente deixou de aparecer como "Responder" e passou a aparecer como "Abrir".
+- O visualizador interno de PDF recebeu o botão "Compartilhar".
+- No celular, o botão "Compartilhar" usa o compartilhamento nativo do Android/iOS quando disponível.
+- Quando o navegador não suporta compartilhamento nativo, o sistema tenta abrir o compartilhamento pelo WhatsApp com o link do PDF.
+
+Versão: 20260707-32
+Cache: excellence-system-20260707-32

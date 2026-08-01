@@ -1,0 +1,9 @@
+Excellence System® - Atualização V26
+
+Ajuste realizado:
+- O botão "Ver PDF" agora abre o documento dentro do próprio sistema, em uma janela/modal interna.
+- Mantidas as opções "Baixar PDF" e "Baixar Word".
+- No iPhone/iPad, alguns navegadores podem limitar a renderização interna de PDFs; nesses casos, o botão "Baixar PDF" permanece disponível.
+
+Versão: 20260707-26
+Cache: excellence-system-20260707-26

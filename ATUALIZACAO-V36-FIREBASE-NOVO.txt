@@ -1,0 +1,13 @@
+ATUALIZAÇÃO V36 - FIREBASE NOVO
+
+- Sistema apontado para o novo projeto Firebase: excellence-system.
+- Removida a configuração antiga do projeto upagro-caa98.
+- Versionamento atualizado para 20260713-36.
+- Incluído README-FIREBASE-NOVO.txt com os passos para iniciar o Firebase limpo.
+- Incluído firebase.json e .firebaserc para facilitar deploy no Firebase Hosting.
+
+Lembre-se de publicar as regras:
+- firestore-rules.txt no Firestore
+- storage-rules.txt no Storage
+
+Depois crie o admin inicial em Authentication e em usuarios/UID_DO_ADMIN no Firestore.

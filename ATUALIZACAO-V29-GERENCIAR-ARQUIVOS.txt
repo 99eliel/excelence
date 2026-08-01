@@ -1,0 +1,12 @@
+EXCELLENCE SYSTEM® - ATUALIZAÇÃO V29
+
+Agora a administração pode gerenciar arquivos já enviados:
+- editar título e descrição;
+- alterar requisito ISO/setor;
+- substituir versão PDF;
+- substituir versão Word;
+- remover versão Word;
+- excluir arquivo do sistema e do Storage.
+
+Funciona para arquivos enviados para empresas e materiais de apoio.
+Versão: 20260707-29

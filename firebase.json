@@ -1,0 +1,36 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.*",
+      "**/node_modules/**",
+      "*.zip",
+      "README*.txt",
+      "ATUALIZACAO*.txt",
+      "OTIMIZACAO*.txt",
+      "firestore.rules",
+      "storage.rules",
+      "firestore-rules.txt",
+      "storage-rules.txt",
+      "functions/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22"
+  }
+}

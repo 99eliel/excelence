@@ -1,0 +1,10 @@
+ATUALIZAÇÃO V35 - ISO COMPLETA E ISO POR TÓPICOS
+
+- A opção ISO completa agora mostra somente um arquivo único enviado pela administração.
+- A opção ISO por tópicos continua exibindo a estrutura desmembrada por requisito ISO.
+- Na aba Materiais de apoio, a administração pode salvar:
+  1. Arquivo ISO completo;
+  2. Material vinculado a tópico ISO;
+  3. Material avulso.
+- O arquivo ISO completo fica salvo como documento único e visível para as empresas.
+- Versionamento atualizado para 20260713-36.

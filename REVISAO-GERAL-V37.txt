@@ -1,0 +1,13 @@
+Excellence System® - Revisão geral v37
+
+O que foi revisado:
+- Sintaxe dos arquivos JavaScript principais.
+- Sincronia de versionamento entre index.html, manifest.json, sw.js, pwa.js e version.json.
+- Separação de material avulso do cofre administrativo para caminho próprio no Storage.
+- Regras do Storage reforçadas com leitura exclusiva de cofre-admin para admin.
+- Regras do Storage com limite de upload de 30 MB e tipos permitidos: PDF, DOC e DOCX.
+
+Ação necessária:
+- Subir os arquivos no Firebase Hosting.
+- Publicar novamente storage-rules.txt no Firebase Storage.
+- Firestore-rules.txt pode ser mantido como está se já estava funcionando.

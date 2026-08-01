@@ -1,0 +1,13 @@
+EXCELLENCE SYSTEM® - ATUALIZAÇÃO V27
+
+Correção aplicada:
+- Ajuste nas ações das etapas ISO para o cliente.
+- O sistema agora busca materiais públicos com filtro publico == true.
+- O sistema busca arquivos específicos somente pela empresa vinculada ao usuário.
+- Isso evita erro de permissão ao clicar em Abrir/Responder.
+
+Versão: 20260707-27
+Cache: excellence-system-20260707-27
+
+IMPORTANTE:
+Suba os arquivos no GitHub e publique novamente as regras do Firestore e Storage se ainda não estiverem atualizadas.

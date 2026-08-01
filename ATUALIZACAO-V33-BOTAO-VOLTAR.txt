@@ -1,0 +1,13 @@
+ATUALIZAÇÃO V33 - BOTÃO VOLTAR DO CELULAR
+
+Versão: 20260707-33
+Cache: excellence-system-20260707-33
+
+Correções:
+- O botão voltar do Android/PWA agora navega dentro do sistema em vez de fechar o aplicativo imediatamente.
+- Se o PDF estiver aberto, o botão voltar fecha primeiro o visualizador interno.
+- Se o menu lateral estiver aberto no celular, o botão voltar fecha o menu.
+- Se o usuário estiver em uma etapa ISO, o botão voltar retorna para a tela anterior.
+- Na tela inicial do sistema, o botão voltar não derruba o app acidentalmente; o encerramento correto continua sendo pelo botão Sair.
+
+Não precisa mudar as regras do Firebase.

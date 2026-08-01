@@ -1,0 +1,8 @@
+Excellence System® - Versão 20260801-39
+
+Atualização:
+- Criação do ecossistema documental por empresa.
+- Admin pode criar pastas dentro de cada empresa.
+- Dentro das pastas, admin pode adicionar PDF, Word e links externos de vídeo, slide ou outros materiais.
+- Cliente visualiza somente o ecossistema da empresa vinculada ao usuário.
+- Regras do Firestore/Storage atualizadas para a coleção empresa_pastas, empresa_recursos e caminho Storage empresas/{empresaId}/ecossistema.

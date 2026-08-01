@@ -1,0 +1,26 @@
+EXCELLENCE SYSTEM® - OTIMIZAÇÃO V24
+
+O que foi enxugado nesta versão:
+
+1. Código dividido
+- A estrutura ISO saiu do app.js e foi para iso-data.js.
+- O controle de atualização/PWA saiu do index.html e foi para pwa.js.
+- O index.html ficou menor e mais limpo.
+
+2. Menos leituras no Firebase
+- O painel inicial deixou de baixar todos os documentos de respostas e arquivos só para contar registros.
+- Agora usa contagem via getCountFromServer.
+- A tela de materiais busca somente arquivos com categoria material_apoio.
+- A tela da etapa busca apenas arquivos da empresa + materiais de apoio, em vez de listar arquivos de todas as empresas naquela etapa.
+
+3. Pacote mais leve
+- Foram removidas cópias duplicadas da foto da autora.
+- Agora existe apenas autora-marcia-pedro.jpg.
+
+4. Mantido o padrão pedido
+- Arquivos sem pastas.
+- Regras também em .txt: firestore-rules.txt e storage-rules.txt.
+- Logo mantida exatamente como foi entregue.
+
+Versão: 20260707-24
+Cache: excellence-system-20260707-24
