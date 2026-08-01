@@ -1,7 +1,7 @@
 {
-  "version": "20260801-44",
+  "version": "20260801-45",
   "name": "Excellence System®",
   "updatedAt": "2026-08-01",
-  "message": "Ecossistema refinado e atualização automática reforçada.",
-  "notes": "A aba Ecossistema ganhou visual de explorador, busca por pasta/arquivo/link e ícones por tipo de conteúdo. O PWA verifica atualizações com mais frequência e recarrega uma vez por versão, reduzindo a necessidade de limpar cache manualmente."
+  "message": "Diário de bordo por empresa adicionado.",
+  "notes": "A administração pode definir horas contratadas por empresa, lançar atividades com início e término, informar almoço/pausa sem desconto e acompanhar horas utilizadas e saldo restante. Clientes podem visualizar o diário da própria empresa."
 }
