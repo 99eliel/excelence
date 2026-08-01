@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-45';
+const APP_VERSION = '20260801-46';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const CORE_FILES = [
