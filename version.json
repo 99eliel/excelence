@@ -1,7 +1,7 @@
 {
-  "version": "20260801-43",
+  "version": "20260801-44",
   "name": "Excellence System®",
   "updatedAt": "2026-08-01",
-  "message": "Materiais com PDF, Word e link independentes.",
-  "notes": "A administração pode cadastrar material com somente PDF, somente Word, somente link ou qualquer combinação entre eles. Nenhum formato obriga o outro."
+  "message": "Ecossistema refinado e atualização automática reforçada.",
+  "notes": "A aba Ecossistema ganhou visual de explorador, busca por pasta/arquivo/link e ícones por tipo de conteúdo. O PWA verifica atualizações com mais frequência e recarrega uma vez por versão, reduzindo a necessidade de limpar cache manualmente."
 }
