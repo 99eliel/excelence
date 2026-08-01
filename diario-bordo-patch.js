@@ -12,7 +12,7 @@ import {
   where
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const DIARIO_VERSION = '20260801-45';
+const DIARIO_VERSION = '20260801-46';
 const PERFIL_CACHE = { value: null, uid: '' };
 
 function escapeHTML(value = '') {
@@ -64,13 +64,13 @@ function minutesBetween(start, end) {
   return diff;
 }
 
-function calculateActivityMinutes(inicio, fim, almocoInicio = '', almocoFim = '') {
+function calculateActivityMinutes(inicio, fim, intervaloInicio = '', intervaloFim = '') {
   const bruto = minutesBetween(inicio, fim);
-  const almoco = almocoInicio && almocoFim ? minutesBetween(almocoInicio, almocoFim) : 0;
+  const intervalo = intervaloInicio && intervaloFim ? minutesBetween(intervaloInicio, intervaloFim) : 0;
   return {
     bruto,
-    almoco,
-    descontado: Math.max(bruto - almoco, 0)
+    intervalo,
+    descontado: Math.max(bruto - intervalo, 0)
   };
 }
 
@@ -157,7 +157,7 @@ function activityIcon(item) {
   if (title.includes('trein')) return '🎓';
   if (title.includes('auditor')) return '🔎';
   if (title.includes('document')) return '📄';
-  if (title.includes('almoço') || title.includes('almoco')) return '🍽️';
+  if (title.includes('intervalo')) return '☕';
   return '📝';
 }
 
@@ -198,7 +198,7 @@ function activityListHTML(atividades, adminMode) {
             ${item.descricao ? `<p>${escapeHTML(item.descricao)}</p>` : ''}
             <div class="diario-activity-meta">
               <span>Bruto: ${minutesToHourLabel(item.minutosBrutos || 0)}</span>
-              <span>Almoço/pausa sem desconto: ${minutesToHourLabel(item.almocoMinutos || 0)}</span>
+              <span>Intervalo/pausa sem desconto: ${minutesToHourLabel(item.intervaloMinutos || item.almocoMinutos || 0)}</span>
               <span>Descontado: ${minutesToHourLabel(item.minutosDescontados || 0)}</span>
             </div>
             ${adminMode ? `
@@ -276,7 +276,7 @@ function diarioModalHTML({ empresa, config, atividades, adminMode }) {
             <div class="diario-section-head">
               <div>
                 <h3>Adicionar atividade</h3>
-                <p>Informe início e término. O horário de almoço/pausa não será descontado.</p>
+                <p>Informe início e término. Intervalos só serão considerados quando a opção estiver marcada.</p>
               </div>
             </div>
             <div class="form-grid-2">
@@ -292,12 +292,18 @@ function diarioModalHTML({ empresa, config, atividades, adminMode }) {
               <div class="form-group"><label>Terminou</label><input name="fim" type="time" required /></div>
             </div>
             <div class="diario-lunch-box">
-              <strong>Almoço / pausa que não desconta</strong>
-              <div class="form-grid-2">
-                <div class="form-group"><label>Início do almoço</label><input name="almocoInicio" type="time" /></div>
-                <div class="form-group"><label>Fim do almoço</label><input name="almocoFim" type="time" /></div>
+              <label class="diario-interval-toggle">
+                <input name="usarIntervalo" type="checkbox" id="usarIntervaloDiario" />
+                <span>
+                  <strong>Teve intervalo / pausa?</strong>
+                  <small>Marque somente quando existir um intervalo que não deve descontar das horas contratadas.</small>
+                </span>
+              </label>
+              <div class="form-grid-2 diario-interval-fields hidden" id="diarioIntervalFields">
+                <div class="form-group"><label>Início do intervalo</label><input name="intervaloInicio" type="time" disabled /></div>
+                <div class="form-group"><label>Fim do intervalo</label><input name="intervaloFim" type="time" disabled /></div>
               </div>
-              <small>Exemplo: 08:00 às 17:00 com almoço 12:00 às 13:00 desconta 8h, não 9h.</small>
+              <small>Exemplo: 08:00 às 17:00 com intervalo 12:00 às 13:00 desconta 8h, não 9h.</small>
             </div>
             <div class="diario-preview" id="diarioPreview">Preencha os horários para calcular o desconto.</div>
             <button class="btn btn-gold" type="submit">Salvar atividade</button>
@@ -373,19 +379,20 @@ async function saveAtividade(empresaId, form) {
   const descricao = String(form.get('descricao') || '').trim();
   const inicio = String(form.get('inicio') || '').trim();
   const fim = String(form.get('fim') || '').trim();
-  const almocoInicio = String(form.get('almocoInicio') || '').trim();
-  const almocoFim = String(form.get('almocoFim') || '').trim();
+  const usarIntervalo = form.get('usarIntervalo') === 'on';
+  const intervaloInicio = usarIntervalo ? String(form.get('intervaloInicio') || '').trim() : '';
+  const intervaloFim = usarIntervalo ? String(form.get('intervaloFim') || '').trim() : '';
 
   if (!data) throw new Error('Informe a data da atividade.');
   if (!titulo) throw new Error('Informe o nome da atividade.');
   if (!inicio || !fim) throw new Error('Informe o horário de início e término.');
-  if ((almocoInicio && !almocoFim) || (!almocoInicio && almocoFim)) {
-    throw new Error('Informe início e fim do almoço, ou deixe os dois campos vazios.');
+  if ((intervaloInicio && !intervaloFim) || (!intervaloInicio && intervaloFim)) {
+    throw new Error('Informe início e fim do intervalo, ou desmarque a opção de intervalo.');
   }
 
-  const calc = calculateActivityMinutes(inicio, fim, almocoInicio, almocoFim);
+  const calc = calculateActivityMinutes(inicio, fim, intervaloInicio, intervaloFim);
   if (calc.bruto <= 0) throw new Error('O horário da atividade precisa ter duração maior que zero.');
-  if (calc.almoco > calc.bruto) throw new Error('O almoço/pausa não pode ser maior que o período total.');
+  if (calc.intervalo > calc.bruto) throw new Error('O intervalo/pausa não pode ser maior que o período total.');
 
   await addDoc(collection(db, 'diario_bordo_atividades'), {
     empresaId,
@@ -394,10 +401,11 @@ async function saveAtividade(empresaId, form) {
     descricao,
     inicio,
     fim,
-    almocoInicio,
-    almocoFim,
+    intervaloInicio,
+    intervaloFim,
     minutosBrutos: calc.bruto,
-    almocoMinutos: calc.almoco,
+    intervaloMinutos: calc.intervalo,
+    almocoMinutos: calc.intervalo,
     minutosDescontados: calc.descontado,
     horasDescontadas: decimalHours(calc.descontado),
     criadoEm: serverTimestamp(),
@@ -413,17 +421,31 @@ function updatePreview(formEl) {
   const form = new FormData(formEl);
   const inicio = String(form.get('inicio') || '');
   const fim = String(form.get('fim') || '');
-  const almocoInicio = String(form.get('almocoInicio') || '');
-  const almocoFim = String(form.get('almocoFim') || '');
+  const usarIntervalo = form.get('usarIntervalo') === 'on';
+  const intervaloInicio = usarIntervalo ? String(form.get('intervaloInicio') || '') : '';
+  const intervaloFim = usarIntervalo ? String(form.get('intervaloFim') || '') : '';
   if (!inicio || !fim) {
     preview.textContent = 'Preencha os horários para calcular o desconto.';
     return;
   }
-  const calc = calculateActivityMinutes(inicio, fim, almocoInicio, almocoFim);
+  const calc = calculateActivityMinutes(inicio, fim, intervaloInicio, intervaloFim);
   preview.innerHTML = `
     <strong>${minutesToHourLabel(calc.descontado)}</strong> serão descontados.
-    <span>Período bruto: ${minutesToHourLabel(calc.bruto)} • Almoço/pausa: ${minutesToHourLabel(calc.almoco)}</span>
+    <span>Período bruto: ${minutesToHourLabel(calc.bruto)} • Intervalo/pausa: ${minutesToHourLabel(calc.intervalo)}</span>
   `;
+}
+
+function toggleIntervalFields(formEl) {
+  if (!formEl) return;
+  const checkbox = formEl.querySelector('[name="usarIntervalo"]');
+  const fields = formEl.querySelector('#diarioIntervalFields');
+  const enabled = checkbox?.checked === true;
+  fields?.classList.toggle('hidden', !enabled);
+  fields?.querySelectorAll('input').forEach(input => {
+    input.disabled = !enabled;
+    if (!enabled) input.value = '';
+  });
+  updatePreview(formEl);
 }
 
 function bindDiarioModal(backdrop, empresaId, adminMode) {
@@ -434,6 +456,8 @@ function bindDiarioModal(backdrop, empresaId, adminMode) {
   });
 
   const atividadeForm = backdrop.querySelector('#diarioAtividadeForm');
+  toggleIntervalFields(atividadeForm);
+  atividadeForm?.querySelector('[name="usarIntervalo"]')?.addEventListener('change', () => toggleIntervalFields(atividadeForm));
   atividadeForm?.addEventListener('input', () => updatePreview(atividadeForm));
   atividadeForm?.addEventListener('submit', async event => {
     event.preventDefault();
@@ -553,6 +577,10 @@ function injectDiarioStyles() {
     .diario-progress span{display:block;height:100%;background:linear-gradient(90deg,#073f5a,#d6a842);border-radius:999px}
     .diario-grid-2{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:16px;margin:16px 0}
     .diario-lunch-box{border:1px dashed var(--line-strong,#bad4df);background:#f8fbfd;border-radius:16px;padding:12px;margin:12px 0}
+    .diario-interval-toggle{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+    .diario-interval-toggle input{width:18px;height:18px;margin-top:2px}
+    .diario-interval-fields{margin-top:12px}
+    .diario-interval-fields.hidden{display:none}
     .diario-lunch-box strong,.diario-lunch-box small{display:block}
     .diario-lunch-box small{color:var(--muted,#627986)}
     .diario-preview{border-radius:14px;background:#f2f7fa;border:1px solid var(--line,#d8e7ee);padding:12px;margin:12px 0;color:var(--muted,#627986)}
