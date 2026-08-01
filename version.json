@@ -1,7 +1,7 @@
 {
-  "version": "20260801-42",
+  "version": "20260801-43",
   "name": "Excellence System®",
   "updatedAt": "2026-08-01",
-  "message": "Materiais com PDF e Word independentes.",
-  "notes": "A administração pode cadastrar materiais somente em PDF, somente em Word ou com as duas versões. É obrigatório informar pelo menos um arquivo."
+  "message": "Materiais com PDF, Word e link independentes.",
+  "notes": "A administração pode cadastrar material com somente PDF, somente Word, somente link ou qualquer combinação entre eles. Nenhum formato obriga o outro."
 }
