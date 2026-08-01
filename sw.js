@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-42';
+const APP_VERSION = '20260801-43';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const FILES = [
@@ -6,6 +6,7 @@ const FILES = [
   `./index.html?v=${APP_VERSION}`,
   `./styles.css?v=${APP_VERSION}`,
   `./app.js?v=${APP_VERSION}`,
+  `./material-link-patch.js?v=${APP_VERSION}`,
   `./iso-data.js?v=${APP_VERSION}`,
   `./pwa.js?v=${APP_VERSION}`,
   `./firebase-config.js?v=${APP_VERSION}`,
