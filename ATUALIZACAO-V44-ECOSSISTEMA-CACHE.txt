@@ -1,0 +1,13 @@
+Versão 20260801-44
+
+- Refinamento visual do Ecossistema da empresa.
+- A tela agora organiza as pastas como explorador, com navegação lateral e conteúdo separado.
+- Adicionada busca por pasta, arquivo, PDF, Word, vídeo, slide e link.
+- Itens agora recebem ícones por tipo de conteúdo.
+- Mantida a liberdade de cadastrar PDF, Word ou link sem obrigar formatos juntos.
+- PWA reforçado para verificar atualização automaticamente e reduzir necessidade de limpar cache manualmente.
+
+Publicação:
+firebase deploy --only hosting --project excellence-system
+
+Não precisa publicar regras novas nesta versão.
