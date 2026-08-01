@@ -1,0 +1,15 @@
+Excellence System® - Versão 20260801-45
+
+Atualização:
+- Criada a função Diário de bordo vinculada à empresa.
+- Admin pode definir o total de horas contratadas da empresa, por exemplo 120 horas.
+- Admin pode adicionar atividades com data, descrição, horário de início e horário de término.
+- Admin pode informar horário de almoço/pausa, que não é descontado do contrato.
+- O sistema calcula automaticamente horas brutas, horas de almoço/pausa, horas descontadas, horas utilizadas e saldo restante.
+- O diário aparece dentro do card da empresa e também como botão de contexto nas áreas da empresa.
+- Cliente pode visualizar o diário da própria empresa em modo somente leitura.
+
+Importante:
+- Esta versão adiciona novas coleções no Firestore: diario_bordo_config e diario_bordo_atividades.
+- Publique as regras atualizadas do firestore-rules.txt ou rode deploy das rules antes de usar em produção.
+- Não houve alteração no Storage.
