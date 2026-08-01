@@ -1,0 +1,8 @@
+Excellence System® - Atualização V46
+
+Ajuste no Diário de bordo:
+- A seção de almoço foi renomeada para Intervalo.
+- O intervalo agora é opcional.
+- Os campos de início e fim do intervalo só aparecem quando a administração marca a opção "Teve intervalo / pausa?".
+- Quando marcado, o intervalo continua não descontando das horas contratadas.
+- Versionamento atualizado para 20260801-46 para reforçar atualização automática do PWA.
