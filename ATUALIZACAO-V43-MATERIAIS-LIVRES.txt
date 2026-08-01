@@ -1,0 +1,7 @@
+ATUALIZAÇÃO V43 - MATERIAIS LIVRES
+
+- Removida a trava que obrigava formatos específicos no material de apoio.
+- A administração agora pode cadastrar material somente com PDF, somente com Word, somente com link ou combinar as opções.
+- Adicionado campo de link externo no Cofre de materiais.
+- Materiais com link exibem o botão Abrir link.
+- Versionamento atualizado para 20260801-43.
