@@ -1,12 +1,11 @@
-const APP_VERSION = '20260801-43';
+const APP_VERSION = '20260801-44';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
-const FILES = [
+const CORE_FILES = [
   './',
   `./index.html?v=${APP_VERSION}`,
   `./styles.css?v=${APP_VERSION}`,
   `./app.js?v=${APP_VERSION}`,
-  `./material-link-patch.js?v=${APP_VERSION}`,
   `./iso-data.js?v=${APP_VERSION}`,
   `./pwa.js?v=${APP_VERSION}`,
   `./firebase-config.js?v=${APP_VERSION}`,
@@ -15,14 +14,16 @@ const FILES = [
   `./logo.png?v=${APP_VERSION}`,
   `./icon-192.png?v=${APP_VERSION}`,
   `./icon-512.png?v=${APP_VERSION}`,
-  `./autora-marcia-pedro.jpg?v=${APP_VERSION}`
+  `./autora-marcia-pedro.jpg?v=${APP_VERSION}`,
+  `./material-link-patch.js?v=${APP_VERSION}`,
+  `./ecosystem-v44-patch.js?v=${APP_VERSION}`
 ];
 
 self.addEventListener('install', event => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(FILES))
+      .then(cache => cache.addAll(CORE_FILES))
       .catch(() => null)
   );
 });
@@ -30,31 +31,33 @@ self.addEventListener('install', event => {
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.map(key => key !== CACHE_NAME ? caches.delete(key) : null)))
+      .then(keys => Promise.all(keys.map(key => key.startsWith('excellence-system-') && key !== CACHE_NAME ? caches.delete(key) : null)))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
+
+function isFreshAsset(url, request) {
+  if (request.mode === 'navigate') return true;
+  return /\.(html|js|css|json)$/i.test(url.pathname);
+}
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  const isLocalAsset = url.origin === self.location.origin;
-  const isNavigation = event.request.mode === 'navigate';
-  const mustBeFresh = isNavigation || /\.(html|js|css|json)$/i.test(url.pathname);
+  const isLocal = url.origin === self.location.origin;
+  if (!isLocal) return;
 
-  if (!isLocalAsset) {
-    event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  if (url.pathname.endsWith('/version.json')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
 
-  if (mustBeFresh) {
+  if (isFreshAsset(url, event.request)) {
     event.respondWith(
       fetch(event.request, { cache: 'no-store' })
         .then(response => {
@@ -69,13 +72,12 @@ self.addEventListener('fetch', event => {
 
   event.respondWith(
     caches.match(event.request).then(cached => {
-      const networkFetch = fetch(event.request).then(response => {
+      const network = fetch(event.request).then(response => {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
         return response;
       }).catch(() => cached);
-
-      return cached || networkFetch;
+      return cached || network;
     })
   );
 });
