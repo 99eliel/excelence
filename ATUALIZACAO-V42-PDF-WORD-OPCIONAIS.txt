@@ -1,0 +1,8 @@
+ATUALIZAÇÃO V42 - PDF E WORD INDEPENDENTES
+
+- Removida a obrigatoriedade de anexar PDF no material de apoio.
+- A administração pode salvar somente PDF, somente Word ou ambos.
+- O sistema exige apenas que pelo menos um dos formatos seja informado.
+- Cards e listagens agora identificam corretamente PDF, Word ou PDF e Word.
+- Materiais somente em Word não são tratados incorretamente como PDF.
+- Versionamento atualizado para 20260801-42.

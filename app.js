@@ -549,7 +549,7 @@ function aboutContentHTML(mode = 'page') {
       </div>
       <div class="author-card">
         <div class="author-photo-box">
-          <img class="author-photo" src="./autora-marcia-pedro.jpg?v=20260801-41" alt="Márcia Pedro" />
+          <img class="author-photo" src="./autora-marcia-pedro.jpg?v=20260801-42" alt="Márcia Pedro" />
         </div>
         <div class="author-info">
           <span class="badge gold">Autora do projeto</span>
@@ -2497,12 +2497,29 @@ function arquivosRecebidosPorSetorHTML(files) {
   }).join('')}</div>`;
 }
 
+function fileHasPdf(file = {}) {
+  return Boolean(file.pdfUrl || file.pdfNome || file.arquivoUrl || file.arquivoNome);
+}
+
+function fileHasWord(file = {}) {
+  return Boolean(file.wordUrl || file.wordNome);
+}
+
+function fileVersionsLabel(file = {}) {
+  const hasPdf = fileHasPdf(file);
+  const hasWord = fileHasWord(file);
+  if (hasPdf && hasWord) return 'PDF e Word';
+  if (hasPdf) return 'PDF';
+  if (hasWord) return 'Word';
+  return 'Sem arquivo';
+}
+
 function fileActionsHTML(file, options = {}) {
   const pdfUrl = file.pdfUrl || file.arquivoUrl || '';
   const wordUrl = file.wordUrl || '';
   const pdfNome = file.pdfNome || file.arquivoNome || 'documento.pdf';
   const wordNome = file.wordNome || 'documento-word.docx';
-  const titulo = file.titulo || pdfNome || 'Documento PDF';
+  const titulo = file.titulo || file.pdfNome || file.arquivoNome || file.wordNome || 'Documento';
   const actions = [];
 
   if (pdfUrl) {
@@ -2613,11 +2630,11 @@ function fileListHTML(files, emptyMessage, options = {}) {
   return `<div class="file-list">${files.map(file => `
     <div class="file-item">
       <div>
-        <strong>${escapeHTML(file.titulo || file.pdfNome || file.arquivoNome || 'Arquivo')}</strong>
+        <strong>${escapeHTML(file.titulo || file.pdfNome || file.arquivoNome || file.wordNome || 'Arquivo')}</strong>
         ${showSector ? fileSectorHTML(file) : ''}
         ${file.descricao ? `<span>${escapeHTML(file.descricao)}</span>` : ''}
         <span>${escapeHTML(fileCategoryLabel(file))}${file.origemLegada ? ' • legado' : ''} • ${formatDate(file.criadoEm)}</span>
-        ${file.wordNome ? `<span>PDF: ${escapeHTML(file.pdfNome || file.arquivoNome || '-')} • Word: ${escapeHTML(file.wordNome)}</span>` : ''}
+        ${(fileHasPdf(file) || fileHasWord(file)) ? `<span>Versões disponíveis: ${escapeHTML(fileVersionsLabel(file))}</span>` : ''}
       </div>
       ${fileActionsHTML(file, options)}
     </div>
@@ -2649,7 +2666,7 @@ function isoCompletaFileHTML(files = []) {
       <p>${escapeHTML(file.descricao || 'Documento completo disponibilizado pela administração.')}</p>
       <div class="vault-meta">
         <span><strong>Tipo:</strong> ISO completa</span>
-        <span><strong>Versões:</strong> ${file.wordNome ? 'PDF e Word' : 'PDF'}</span>
+        <span><strong>Versões:</strong> ${escapeHTML(fileVersionsLabel(file))}</span>
       </div>
       ${fileActionsHTML(file)}
     </section>
@@ -2689,22 +2706,31 @@ function baseStoragePathForArquivo({ categoria, empresaId, req, tipoMaterial = '
 async function salvarArquivoISO({ categoria, empresaId = '', req = null, form, publico = false, tipoMaterial = '' }) {
   const pdfFile = form.get('arquivoPdf') || form.get('arquivo');
   const wordFile = form.get('arquivoWord');
+  const hasPdf = Boolean(pdfFile && pdfFile.name);
+  const hasWord = Boolean(wordFile && wordFile.name);
 
-  if (!pdfFile || !pdfFile.name) throw new Error('Selecione a versão em PDF.');
+  if (!hasPdf && !hasWord) throw new Error('Selecione pelo menos um arquivo em PDF ou Word.');
   const materialIsoCompleta = categoria === 'material_apoio' && tipoMaterial === 'iso_completa';
   if (categoria !== 'material_apoio' && !req) throw new Error('Selecione um requisito ISO válido.');
   if (categoria === 'material_apoio' && !materialIsoCompleta && tipoMaterial !== 'avulso' && !req) throw new Error('Selecione um requisito ISO válido.');
 
   const materialAvulso = categoria === 'material_apoio' && tipoMaterial === 'avulso';
   const basePath = baseStoragePathForArquivo({ categoria, empresaId, req, tipoMaterial });
-  const pdfStoragePath = `${basePath}/pdf/${safeFileName(pdfFile.name)}`;
-  const pdfUrl = await uploadArquivoVersao(pdfStoragePath, pdfFile);
+  let pdfUrl = '';
+  let pdfNome = '';
+  let pdfStoragePath = '';
+
+  if (hasPdf) {
+    pdfStoragePath = `${basePath}/pdf/${safeFileName(pdfFile.name)}`;
+    pdfUrl = await uploadArquivoVersao(pdfStoragePath, pdfFile);
+    pdfNome = pdfFile.name;
+  }
 
   let wordUrl = '';
   let wordNome = '';
   let wordStoragePath = '';
 
-  if (wordFile && wordFile.name) {
+  if (hasWord) {
     wordStoragePath = `${basePath}/word/${safeFileName(wordFile.name)}`;
     wordUrl = await uploadArquivoVersao(wordStoragePath, wordFile);
     wordNome = wordFile.name;
@@ -2720,17 +2746,17 @@ async function salvarArquivoISO({ categoria, empresaId = '', req = null, form, p
     requisitoId: materialIsoCompleta || materialAvulso ? '' : req.id,
     requisitoNumero: materialIsoCompleta ? 'ISO completa' : (materialAvulso ? 'Avulso' : req.number),
     requisitoTitulo: materialIsoCompleta ? 'Arquivo completo' : (materialAvulso ? 'Material avulso' : req.title),
-    titulo: (form.get('titulo') || '').trim() || (materialIsoCompleta ? 'ISO completa' : pdfFile.name),
+    titulo: (form.get('titulo') || '').trim() || (materialIsoCompleta ? 'ISO completa' : (pdfNome || wordNome)),
     descricao: (form.get('descricao') || '').trim(),
     pdfUrl,
-    pdfNome: pdfFile.name,
+    pdfNome,
     pdfStoragePath,
     wordUrl,
     wordNome,
     wordStoragePath,
-    // Campos legados mantidos para compatibilidade com telas e dados antigos.
+    // Campos legados só apontam para PDF, evitando tratar Word como PDF nas telas antigas.
     arquivoUrl: pdfUrl,
-    arquivoNome: pdfFile.name,
+    arquivoNome: pdfNome,
     storagePath: pdfStoragePath,
     atualizadoPor: state.user.uid,
     atualizadoEm: serverTimestamp()
@@ -3281,12 +3307,12 @@ function materialVaultCardHTML(file) {
         <span class="vault-badge ${isCompleto ? 'completo' : (isAvulso ? 'avulso' : 'iso')}">${isCompleto ? 'ISO completa' : (isAvulso ? 'Avulso' : 'Tópico ISO')}</span>
         <small>${formatDate(file.criadoEm)}</small>
       </div>
-      <h3>${escapeHTML(file.titulo || file.pdfNome || file.arquivoNome || 'Material de apoio')}</h3>
+      <h3>${escapeHTML(file.titulo || file.pdfNome || file.arquivoNome || file.wordNome || 'Material de apoio')}</h3>
       <p>${escapeHTML(file.descricao || 'Sem descrição cadastrada.')}</p>
       <div class="vault-meta">
         <span><strong>Setor:</strong> ${escapeHTML(isCompleto ? 'ISO completa' : (isAvulso ? 'Material avulso' : fileSectorLabel(file)))}</span>
         <span><strong>Visibilidade:</strong> ${visibility}</span>
-        ${file.wordNome ? `<span><strong>Versões:</strong> PDF e Word</span>` : '<span><strong>Versões:</strong> PDF</span>'}
+        <span><strong>Versões:</strong> ${escapeHTML(fileVersionsLabel(file))}</span>
       </div>
       ${fileActionsHTML(file, { adminManage: true })}
     </article>
@@ -3338,7 +3364,7 @@ async function renderMateriais(preselectedReqId = '', preselectedEmpresaId = '')
         <div>
           <span class="kicker">Novo material</span>
           <h2>Adicionar ao cofre</h2>
-          <p class="muted" style="margin:6px 0 0;">O PDF é usado para visualizar dentro do app. O Word é opcional para download.</p>
+          <p class="muted" style="margin:6px 0 0;">Envie somente o PDF, somente o Word ou as duas versões. O PDF pode ser visualizado dentro do app; o Word fica disponível para download.</p>
         </div>
         <button class="btn btn-soft btn-small" type="button" id="closeMaterialForm">Fechar</button>
       </div>
@@ -3367,8 +3393,8 @@ async function renderMateriais(preselectedReqId = '', preselectedEmpresaId = '')
       <div class="form-group"><label>Título do material</label><input name="titulo" required placeholder="Ex.: ISO completa, Modelo de Análise SWOT ou Procedimento 5.1" /></div>
       <div class="form-group"><label>Descrição/orientação</label><textarea name="descricao" placeholder="Explique quando e como este material deve ser usado."></textarea></div>
       <div class="form-grid-2">
-        <div class="form-group"><label>Versão em PDF</label><input name="arquivoPdf" type="file" accept="application/pdf,.pdf" required /><small>Usada para “Ver PDF” e “Baixar PDF”.</small></div>
-        <div class="form-group"><label>Versão em Word</label><input name="arquivoWord" type="file" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" /><small>Opcional. Aparece como “Baixar Word”.</small></div>
+        <div class="form-group"><label>Versão em PDF (opcional)</label><input name="arquivoPdf" type="file" accept="application/pdf,.pdf" /><small>Quando enviada, libera “Ver PDF” e “Baixar PDF”.</small></div>
+        <div class="form-group"><label>Versão em Word (opcional)</label><input name="arquivoWord" type="file" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" /><small>Quando enviada, libera “Baixar Word”. É obrigatório selecionar pelo menos um dos dois formatos.</small></div>
       </div>
       <button class="btn btn-primary" type="submit">Salvar material</button>
     </form>
