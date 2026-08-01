@@ -1,7 +1,7 @@
 {
-  "version": "20260801-45",
+  "version": "20260801-46",
   "name": "Excellence System®",
   "updatedAt": "2026-08-01",
-  "message": "Diário de bordo por empresa adicionado.",
-  "notes": "A administração pode definir horas contratadas por empresa, lançar atividades com início e término, informar almoço/pausa sem desconto e acompanhar horas utilizadas e saldo restante. Clientes podem visualizar o diário da própria empresa."
+  "message": "Intervalo opcional no Diário de bordo.",
+  "notes": "No lançamento de atividade, a área de intervalo agora só aparece quando a administração marca que houve intervalo/pausa. O intervalo não é obrigatório e continua sem descontar das horas contratadas."
 }
