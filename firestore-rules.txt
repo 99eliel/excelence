@@ -70,14 +70,11 @@ service cloud.firestore {
     }
 
     match /respostas_iso/{respostaId} {
-      // O cliente precisa conseguir abrir uma etapa mesmo quando a resposta ainda não existe.
-      // Por isso o get é liberado pelo prefixo do ID: empresaId_requisitoId.
       allow get: if souAdmin() || (
         souCliente()
         && respostaId.matches('^' + minhaEmpresa() + '_.*$')
       );
 
-      // Para listagens/consultas, o acesso continua restrito à própria empresa.
       allow list: if souAdmin() || (
         souCliente()
         && resource.data.empresaId == minhaEmpresa()
@@ -100,8 +97,6 @@ service cloud.firestore {
       allow delete: if souAdmin();
     }
 
-    // Nova coleção central de arquivos do Excellence System®.
-    // categoria: material_apoio | empresa | consultoria
     match /arquivos/{arquivoId} {
       allow read: if souAdmin() || (
         souCliente() && (
@@ -110,12 +105,9 @@ service cloud.firestore {
         )
       );
 
-      // Apenas a administração cria arquivos.
-      // Clientes visualizam materiais/arquivos e preenchem somente as respostas de 4.1 e 4.2.
       allow create, update, delete: if souAdmin();
     }
 
-    // Ecossistema documental por empresa: pastas e itens com PDF, Word ou link.
     match /empresa_pastas/{pastaId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
@@ -126,7 +118,17 @@ service cloud.firestore {
       allow create, update, delete: if souAdmin();
     }
 
-    // Coleções antigas mantidas apenas para compatibilidade com arquivos já enviados.
+    // Diário de bordo por empresa: horas contratadas, atividades e saldo.
+    match /diario_bordo_config/{empresaId} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update, delete: if souAdmin();
+    }
+
+    match /diario_bordo_atividades/{atividadeId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
     match /materiais_apoio/{materialId} {
       allow read: if souAdmin() || (
         souCliente() && (
