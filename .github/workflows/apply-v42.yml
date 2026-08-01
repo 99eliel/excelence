@@ -1,0 +1,43 @@
+name: Aplicar correção v42
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/apply-v42.yml
+
+permissions:
+  contents: write
+
+jobs:
+  aplicar-correcao:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Aplicar mudanças
+        run: python .github/scripts/apply_v42.py
+
+      - name: Validar JavaScript e JSON
+        run: |
+          node --check app.js
+          node --check pwa.js
+          node --check sw.js
+          python -m json.tool manifest.json > /dev/null
+          python -m json.tool version.json > /dev/null
+
+      - name: Remover arquivos temporários
+        run: rm -f .github/scripts/apply_v42.py .github/workflows/apply-v42.yml
+
+      - name: Publicar versão 42
+        run: |
+          git config user.name "Excellence System Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Libera materiais somente PDF, somente Word ou ambos"
+          git push origin main
