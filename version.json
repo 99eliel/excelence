@@ -1,7 +1,7 @@
 {
-  "version": "20260801-47",
+  "version": "20260801-48",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Agenda com carregamento rápido e cache.",
-  "notes": "A agenda agora mostra uma versão salva imediatamente quando disponível, pré-carrega em segundo plano e usa cache na Cloud Function para reduzir demora ao abrir. Também mantém o versionamento do PWA para atualizar automaticamente."
+  "message": "Relatório completo do Diário de bordo.",
+  "notes": "O Diário de bordo agora tem ações para imprimir relatório e baixar PDF personalizado, com identidade do Excellence System®, dados da empresa, horas contratadas, utilizadas, intervalos, saldo e histórico completo de atividades."
 }
