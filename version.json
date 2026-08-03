@@ -1,7 +1,7 @@
 {
-  "version": "20260801-46",
+  "version": "20260801-47",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-01",
-  "message": "Intervalo opcional no Diário de bordo.",
-  "notes": "No lançamento de atividade, a área de intervalo agora só aparece quando a administração marca que houve intervalo/pausa. O intervalo não é obrigatório e continua sem descontar das horas contratadas."
+  "updatedAt": "2026-08-03",
+  "message": "Agenda com carregamento rápido e cache.",
+  "notes": "A agenda agora mostra uma versão salva imediatamente quando disponível, pré-carrega em segundo plano e usa cache na Cloud Function para reduzir demora ao abrir. Também mantém o versionamento do PWA para atualizar automaticamente."
 }
