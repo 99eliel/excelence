@@ -1,7 +1,7 @@
 {
-  "version": "20260801-48",
+  "version": "20260801-49",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Relatório completo do Diário de bordo.",
-  "notes": "O Diário de bordo agora tem ações para imprimir relatório e baixar PDF personalizado, com identidade do Excellence System®, dados da empresa, horas contratadas, utilizadas, intervalos, saldo e histórico completo de atividades."
+  "message": "Permissões de upload por item para empresas.",
+  "notes": "A administração pode escolher quais itens do Ecossistema poderão receber envios/alterações da empresa, liberando PDF, Word e/ou link por item. Clientes visualizam somente os itens liberados para sua empresa e podem enviar os arquivos permitidos. Regras do Firestore e Storage foram reforçadas para manter a liberação segura."
 }
