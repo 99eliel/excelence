@@ -6,6 +6,8 @@ const ical = require('node-ical');
 admin.initializeApp();
 
 const CALENDAR_ICS_URL = defineString('MARCIA_CALENDAR_ICS_URL');
+const AGENDA_CACHE_TTL_MS = 10 * 60 * 1000;
+const agendaMemoryCache = new Map();
 
 function cleanText(value = '') {
   return String(value || '')
@@ -72,9 +74,63 @@ function expandEvent(event, rangeStart, rangeEnd) {
   return events;
 }
 
+function buildCacheKey(days) {
+  return `marcia_${Number(days) || 30}`;
+}
+
+function isFresh(updatedAtMs) {
+  return updatedAtMs && (Date.now() - Number(updatedAtMs)) < AGENDA_CACHE_TTL_MS;
+}
+
+function publicAgendaPayload(data = {}, cacheSource = 'cache') {
+  return {
+    days: Number(data.days || 30),
+    total: Number(data.total || (Array.isArray(data.events) ? data.events.length : 0)),
+    events: Array.isArray(data.events) ? data.events : [],
+    updatedAt: data.updatedAt || new Date(Number(data.updatedAtMs || Date.now())).toISOString(),
+    cacheSource
+  };
+}
+
+async function readAgendaCache(cacheKey) {
+  const memory = agendaMemoryCache.get(cacheKey);
+  if (memory && isFresh(memory.updatedAtMs)) {
+    return { fresh: true, data: publicAgendaPayload(memory.data, 'memory') };
+  }
+
+  const snap = await admin.firestore().doc(`agenda_cache/${cacheKey}`).get();
+  if (!snap.exists) return { fresh: false, data: null };
+
+  const raw = snap.data() || {};
+  const data = publicAgendaPayload(raw, 'firestore');
+  const cacheData = { data, updatedAtMs: Number(raw.updatedAtMs || 0) };
+  agendaMemoryCache.set(cacheKey, cacheData);
+
+  return {
+    fresh: isFresh(raw.updatedAtMs),
+    data
+  };
+}
+
+async function writeAgendaCache(cacheKey, payload) {
+  const updatedAtMs = Date.now();
+  const data = {
+    ...payload,
+    updatedAtMs,
+    cacheUpdatedAt: admin.firestore.FieldValue.serverTimestamp()
+  };
+
+  agendaMemoryCache.set(cacheKey, {
+    data,
+    updatedAtMs
+  });
+
+  await admin.firestore().doc(`agenda_cache/${cacheKey}`).set(data, { merge: true });
+}
+
 exports.getAgendaMarcia = onCall({
   region: 'southamerica-east1',
-  timeoutSeconds: 20,
+  timeoutSeconds: 60,
   memory: '256MiB'
 }, async (request) => {
   if (!request.auth) {
@@ -94,6 +150,17 @@ exports.getAgendaMarcia = onCall({
   }
 
   const days = Math.min(Math.max(Number(request.data?.days || 30), 1), 90);
+  const force = request.data?.force === true;
+  const cacheKey = buildCacheKey(days);
+  let cached = null;
+
+  if (!force) {
+    cached = await readAgendaCache(cacheKey);
+    if (cached.fresh && cached.data) {
+      return cached.data;
+    }
+  }
+
   const rangeStart = new Date();
   rangeStart.setHours(0, 0, 0, 0);
   const rangeEnd = new Date(rangeStart.getTime() + days * 24 * 60 * 60 * 1000);
@@ -106,14 +173,28 @@ exports.getAgendaMarcia = onCall({
       .sort((a, b) => new Date(a.start) - new Date(b.start))
       .slice(0, 120);
 
-    return {
+    const payload = {
       days,
       total: events.length,
       events,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      cacheSource: 'live'
     };
+
+    await writeAgendaCache(cacheKey, payload);
+    return payload;
   } catch (error) {
     console.error('Erro ao ler agenda iCal:', error);
+
+    const fallback = cached?.data || (await readAgendaCache(cacheKey)).data;
+    if (fallback) {
+      return {
+        ...fallback,
+        stale: true,
+        cacheSource: 'stale'
+      };
+    }
+
     throw new HttpsError('internal', 'Não foi possível carregar a agenda agora.');
   }
 });
