@@ -11,6 +11,10 @@ service firebase.storage {
       return /databases/(default)/documents/usuarios/$(request.auth.uid);
     }
 
+    function recursoPath(recursoId) {
+      return /databases/(default)/documents/empresa_recursos/$(recursoId);
+    }
+
     function temPerfil() {
       return logado() && firestore.exists(usuarioPath());
     }
@@ -46,6 +50,18 @@ service firebase.storage {
       return souAdmin() && tamanhoPermitido() && tipoArquivoPermitido();
     }
 
+    function recursoClienteLiberado(empresaId, recursoId, tipo) {
+      return souCliente()
+        && minhaEmpresa() == empresaId
+        && firestore.exists(recursoPath(recursoId))
+        && firestore.get(recursoPath(recursoId)).data.empresaId == empresaId
+        && firestore.get(recursoPath(recursoId)).data.clientePodeEditar == true
+        && (
+          (tipo == "pdf" && firestore.get(recursoPath(recursoId)).data.clientePermitePdf == true) ||
+          (tipo == "word" && firestore.get(recursoPath(recursoId)).data.clientePermiteWord == true)
+        );
+    }
+
     // Cofre interno da administração: materiais avulsos que não devem aparecer para clientes.
     match /cofre-admin/{allPaths=**} {
       allow read: if souAdmin();
@@ -72,8 +88,21 @@ service firebase.storage {
       allow delete: if souAdmin();
     }
 
+    // Uploads liberados pela administração para usuários da própria empresa.
+    // O caminho contém o item liberado: empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/arquivo
+    match /empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/{allPaths=**} {
+      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow create, update: if request.auth.uid == userId
+        && recursoClienteLiberado(empresaId, recursoId, tipo)
+        && tamanhoPermitido()
+        && tipoArquivoPermitido();
+      allow delete: if souAdmin() || (
+        request.auth.uid == userId
+        && recursoClienteLiberado(empresaId, recursoId, tipo)
+      );
+    }
+
     // Caminho antigo de documentos/evidências da empresa.
-    // A empresa não envia arquivos pelo sistema; uploads ficam sob responsabilidade da administração.
     match /empresas/{empresaId}/documentos-empresa/{allPaths=**} {
       allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
