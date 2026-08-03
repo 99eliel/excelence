@@ -51,6 +51,33 @@ service cloud.firestore {
         && request.resource.data.ativo == true;
     }
 
+    function camposClienteRecurso() {
+      return [
+        "clientePdfUrl",
+        "clientePdfNome",
+        "clientePdfStoragePath",
+        "clienteWordUrl",
+        "clienteWordNome",
+        "clienteWordStoragePath",
+        "clienteLinkUrl",
+        "clienteStatus",
+        "clienteAtualizadoEm",
+        "clienteAtualizadoPor"
+      ];
+    }
+
+    function clienteAtualizaRecursoLiberado() {
+      return souCliente()
+        && resource.data.empresaId == minhaEmpresa()
+        && resource.data.clientePodeEditar == true
+        && request.resource.data.empresaId == resource.data.empresaId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(camposClienteRecurso())
+        && request.resource.data.clienteAtualizadoPor == request.auth.uid
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clientePdfUrl", "clientePdfNome", "clientePdfStoragePath"]) || resource.data.clientePermitePdf == true)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clienteWordUrl", "clienteWordNome", "clienteWordStoragePath"]) || resource.data.clientePermiteWord == true)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clienteLinkUrl"]) || resource.data.clientePermiteLink == true);
+    }
+
     match /usuarios/{userId} {
       allow get: if souAdmin() || (logado() && request.auth.uid == userId);
       allow list: if souAdmin();
@@ -115,7 +142,8 @@ service cloud.firestore {
 
     match /empresa_recursos/{recursoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
-      allow create, update, delete: if souAdmin();
+      allow create, delete: if souAdmin();
+      allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
     // Diário de bordo por empresa: horas contratadas, atividades e saldo.
