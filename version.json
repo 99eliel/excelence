@@ -1,7 +1,7 @@
 {
-  "version": "20260801-51",
+  "version": "20260801-52",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Correção do clique no mini calendário da agenda.",
-  "notes": "Ao clicar em um dia do mini calendário, a Agenda agora abre um bloco claro com os compromissos daquele dia selecionado. Também há opção de voltar para todos os compromissos e o comportamento foi reforçado para funcionar melhor no celular."
+  "message": "Clique reforçado no mini calendário da agenda.",
+  "notes": "Foi adicionada uma correção mais forte para o clique nos dias do mini calendário, usando captura por pointer/touch/click e um painel próprio do dia selecionado. Ao tocar em um dia, o sistema deve exibir imediatamente os compromissos encontrados e permitir voltar para todos."
 }
