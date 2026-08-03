@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-46';
+const APP_VERSION = '20260801-47';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const CORE_FILES = [
@@ -17,7 +17,8 @@ const CORE_FILES = [
   `./autora-marcia-pedro.jpg?v=${APP_VERSION}`,
   `./material-link-patch.js?v=${APP_VERSION}`,
   `./ecosystem-v44-patch.js?v=${APP_VERSION}`,
-  `./diario-bordo-patch.js?v=${APP_VERSION}`
+  `./diario-bordo-patch.js?v=${APP_VERSION}`,
+  `./agenda-fast-patch.js?v=${APP_VERSION}`
 ];
 
 self.addEventListener('install', event => {
