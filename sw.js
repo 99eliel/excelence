@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-48';
+const APP_VERSION = '20260801-49';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const CORE_FILES = [
@@ -19,7 +19,8 @@ const CORE_FILES = [
   `./ecosystem-v44-patch.js?v=${APP_VERSION}`,
   `./diario-bordo-patch.js?v=${APP_VERSION}`,
   `./diario-report-patch.js?v=${APP_VERSION}`,
-  `./agenda-fast-patch.js?v=${APP_VERSION}`
+  `./agenda-fast-patch.js?v=${APP_VERSION}`,
+  `./cliente-upload-patch.js?v=${APP_VERSION}`
 ];
 
 self.addEventListener('install', event => {
