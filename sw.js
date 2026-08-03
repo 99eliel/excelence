@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-49';
+const APP_VERSION = '20260801-50';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const CORE_FILES = [
@@ -20,6 +20,7 @@ const CORE_FILES = [
   `./diario-bordo-patch.js?v=${APP_VERSION}`,
   `./diario-report-patch.js?v=${APP_VERSION}`,
   `./agenda-fast-patch.js?v=${APP_VERSION}`,
+  `./agenda-mini-calendar-patch.js?v=${APP_VERSION}`,
   `./cliente-upload-patch.js?v=${APP_VERSION}`
 ];
 
