@@ -1,7 +1,7 @@
 {
-  "version": "20260801-49",
+  "version": "20260801-50",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Permissões de upload por item para empresas.",
-  "notes": "A administração pode escolher quais itens do Ecossistema poderão receber envios/alterações da empresa, liberando PDF, Word e/ou link por item. Clientes visualizam somente os itens liberados para sua empresa e podem enviar os arquivos permitidos. Regras do Firestore e Storage foram reforçadas para manter a liberação segura."
+  "message": "Mini calendário na aba Agenda.",
+  "notes": "A aba Agenda agora possui um mini calendário acima dos compromissos. A administração pode navegar pelos meses, clicar em um dia para filtrar os eventos daquele dia, voltar para todos os compromissos ou selecionar hoje rapidamente."
 }
