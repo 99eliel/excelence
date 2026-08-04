@@ -1,7 +1,7 @@
 {
-  "version": "20260801-54",
+  "version": "20260801-55",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Agenda com calendário compacto padronizado.",
-  "notes": "A Agenda foi reorganizada para evitar expansão lateral despadronizada. O mini calendário fica menor no canto superior direito e os compromissos do dia selecionado aparecem abaixo dele, dentro do mesmo bloco, com destaque animado no dia selecionado."
+  "message": "Agenda com layout estabilizado.",
+  "notes": "A Agenda foi reorganizada em uma estrutura estável: compromissos ocupam a área principal à esquerda e o mini calendário fica compacto à direita, sem gerar expansão lateral torta ou vazio excessivo. Os patches visuais anteriores foram substituídos por um layout de duas colunas controladas."
 }
