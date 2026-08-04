@@ -1,7 +1,7 @@
 {
-  "version": "20260801-53",
+  "version": "20260801-54",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Mini calendário compacto na Agenda.",
-  "notes": "O mini calendário da Agenda foi reduzido e reposicionado no canto superior direito da área de compromissos. O dia selecionado agora recebe animação visual com destaque pulsante, mantendo o clique reforçado para abrir os compromissos do dia."
+  "message": "Agenda com calendário compacto padronizado.",
+  "notes": "A Agenda foi reorganizada para evitar expansão lateral despadronizada. O mini calendário fica menor no canto superior direito e os compromissos do dia selecionado aparecem abaixo dele, dentro do mesmo bloco, com destaque animado no dia selecionado."
 }
