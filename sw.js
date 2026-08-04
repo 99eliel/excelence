@@ -1,4 +1,4 @@
-const APP_VERSION = '20260801-54';
+const APP_VERSION = '20260801-55';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 const CORE_FILES = [
@@ -23,8 +23,7 @@ const CORE_FILES = [
   `./agenda-mini-calendar-patch.js?v=${APP_VERSION}`,
   `./agenda-day-click-patch.js?v=${APP_VERSION}`,
   `./agenda-click-hard-patch.js?v=${APP_VERSION}`,
-  `./agenda-calendar-compact-patch.js?v=${APP_VERSION}`,
-  `./agenda-calendar-clean-patch.js?v=${APP_VERSION}`,
+  `./agenda-layout-stable-patch.js?v=${APP_VERSION}`,
   `./cliente-upload-patch.js?v=${APP_VERSION}`
 ];
 
