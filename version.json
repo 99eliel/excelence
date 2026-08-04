@@ -1,7 +1,7 @@
 {
-  "version": "20260801-55",
+  "version": "20260801-56",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-03",
-  "message": "Agenda com layout estabilizado.",
-  "notes": "A Agenda foi reorganizada em uma estrutura estável: compromissos ocupam a área principal à esquerda e o mini calendário fica compacto à direita, sem gerar expansão lateral torta ou vazio excessivo. Os patches visuais anteriores foram substituídos por um layout de duas colunas controladas."
+  "updatedAt": "2026-08-04",
+  "message": "Acesso temporariamente suspenso.",
+  "notes": "O index principal foi substituído por uma tela de bloqueio temporário informando que banco de dados e hospedagem estão desativados. O index ativo anterior foi salvo em index-app-ativo-backup-v55.html para facilitar a reativação quando necessário."
 }
