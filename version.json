@@ -1,7 +1,7 @@
 {
-  "version": "20260801-56",
+  "version": "20260804-59",
   "name": "Excellence System®",
   "updatedAt": "2026-08-04",
-  "message": "Acesso temporariamente suspenso.",
-  "notes": "O index principal foi substituído por uma tela de bloqueio temporário informando que banco de dados e hospedagem estão desativados. O index ativo anterior foi salvo em index-app-ativo-backup-v55.html para facilitar a reativação quando necessário."
+  "message": "Sistema reativado após regularização.",
+  "notes": "O index principal foi restaurado a partir do backup ativo v55 e recebeu versionamento novo para substituir a tela de bloqueio no PWA. Service worker, manifest e PWA foram atualizados para forçar a atualização para a versão reativada."
 }
