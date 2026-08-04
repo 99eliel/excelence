@@ -1,7 +1,7 @@
 {
-  "version": "20260801-52",
+  "version": "20260801-53",
   "name": "Excellence System®",
   "updatedAt": "2026-08-03",
-  "message": "Clique reforçado no mini calendário da agenda.",
-  "notes": "Foi adicionada uma correção mais forte para o clique nos dias do mini calendário, usando captura por pointer/touch/click e um painel próprio do dia selecionado. Ao tocar em um dia, o sistema deve exibir imediatamente os compromissos encontrados e permitir voltar para todos."
+  "message": "Mini calendário compacto na Agenda.",
+  "notes": "O mini calendário da Agenda foi reduzido e reposicionado no canto superior direito da área de compromissos. O dia selecionado agora recebe animação visual com destaque pulsante, mantendo o clique reforçado para abrir os compromissos do dia."
 }
