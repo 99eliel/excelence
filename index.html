@@ -7,39 +7,138 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="theme-color" content="#073F5A" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="app-version" content="2026.08.01.55" />
-  <title>Excellence System® | MP Consultoria</title>
-  <link rel="manifest" href="manifest.json?v=20260801-55" />
-  <link rel="icon" href="icon-192.png?v=20260801-55" />
-  <link rel="apple-touch-icon" href="icon-192.png?v=20260801-55" />
-  <link rel="stylesheet" href="styles.css?v=20260801-55" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="app-version" content="2026.08.04.56" />
+  <title>Excellence System® | Acesso temporariamente indisponível</title>
+  <link rel="icon" href="icon-192.png?v=20260801-56" />
+  <style>
+    :root {
+      --primary: #073F5A;
+      --primary-2: #0b5b7d;
+      --gold: #d6a842;
+      --bg: #eef5f8;
+      --text: #0d2c3c;
+      --muted: #607788;
+      --line: #d6e7ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(214,168,66,.22), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(7,63,90,.18), transparent 36%),
+        linear-gradient(135deg, #f7fbfd 0%, var(--bg) 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .suspended-card {
+      width: min(760px, 100%);
+      background: rgba(255,255,255,.94);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: 0 28px 80px rgba(7,63,90,.18);
+      padding: 34px;
+      text-align: center;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--primary);
+      font-weight: 900;
+    }
+    .brand img {
+      width: 46px;
+      height: 46px;
+      object-fit: contain;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 5px;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(214,168,66,.16);
+      color: #8a6415;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5vw, 46px);
+      line-height: 1.06;
+      color: var(--primary);
+    }
+    .main-message {
+      margin: 18px auto 0;
+      font-size: clamp(18px, 2.5vw, 24px);
+      font-weight: 900;
+      color: var(--text);
+      max-width: 620px;
+    }
+    .description {
+      margin: 16px auto 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 620px;
+    }
+    .notice-box {
+      margin-top: 24px;
+      padding: 18px;
+      border: 1px dashed rgba(7,63,90,.28);
+      border-radius: 20px;
+      background: #f6fbfd;
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .footer {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    @media (max-width: 560px) {
+      body { padding: 14px; }
+      .suspended-card { padding: 24px 18px; border-radius: 22px; }
+      .brand { flex-direction: column; gap: 8px; }
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <div class="boot-screen">
-      <img class="boot-logo" src="logo.png?v=20260801-55" alt="MP Consultoria" />
-      <h1>Excellence System®</h1>
-      <p>Carregando sistema de gestão da qualidade...</p>
+  <main class="suspended-card" role="main">
+    <div class="brand">
+      <img src="logo.png?v=20260801-56" alt="Excellence System®" />
+      <span>Excellence System®</span>
     </div>
-  </div>
 
-  <script>
-    window.EXCELLENCE_SYSTEM_VERSION = '20260801-55';
-  </script>
-  <script type="module" src="firebase-config.js?v=20260801-55"></script>
-  <script type="module" src="app.js?v=20260801-55"></script>
-  <script type="module" src="material-link-patch.js?v=20260801-55"></script>
-  <script src="ecosystem-v44-patch.js?v=20260801-55"></script>
-  <script type="module" src="diario-bordo-patch.js?v=20260801-55"></script>
-  <script type="module" src="diario-report-patch.js?v=20260801-55"></script>
-  <script type="module" src="agenda-fast-patch.js?v=20260801-55"></script>
-  <script src="agenda-mini-calendar-patch.js?v=20260801-55"></script>
-  <script src="agenda-day-click-patch.js?v=20260801-55"></script>
-  <script src="agenda-click-hard-patch.js?v=20260801-55"></script>
-  <script src="agenda-layout-stable-patch.js?v=20260801-55"></script>
-  <script type="module" src="cliente-upload-patch.js?v=20260801-55"></script>
-  <script src="pwa.js?v=20260801-55"></script>
+    <div class="status-pill">Acesso temporariamente suspenso</div>
+
+    <h1>Sistema indisponível</h1>
+
+    <p class="main-message">Banco de dados e hospedagem desativados temporariamente.</p>
+
+    <p class="description">
+      O acesso ao sistema foi interrompido de forma preventiva. Os dados permanecem preservados e o acesso será normalizado após a regularização administrativa.
+    </p>
+
+    <div class="notice-box">
+      Entre em contato com o responsável pelo sistema para solicitar a reativação do acesso.
+    </div>
+
+    <p class="footer">Sistema desenvolvido e emprestado por Eliel do Carmo.</p>
+  </main>
 </body>
 </html>
