@@ -1,7 +1,7 @@
 {
-  "version": "20260804-59",
+  "version": "20260805-60",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-04",
-  "message": "Sistema reativado após regularização.",
-  "notes": "O index principal foi restaurado a partir do backup ativo v55 e recebeu versionamento novo para substituir a tela de bloqueio no PWA. Service worker, manifest e PWA foram atualizados para forçar a atualização para a versão reativada."
+  "updatedAt": "2026-08-05",
+  "message": "Apontamento de produção no ecossistema da empresa.",
+  "notes": "A aba Ecossistema da empresa agora possui uma área de apontamento de produção para registrar data, modelo, quantidade de peças, valor de venda por peça, total calculado, célula, cor, tamanho, gênero e ocorrências. O painel também mostra total de peças, valor total vendido e preço médio por peça."
 }
