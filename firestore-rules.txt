@@ -146,6 +146,28 @@ service cloud.firestore {
       allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
+    // Apontamento de produção por empresa: quantidade de peças, valor de venda e total calculado.
+    match /empresa_apontamentos/{apontamentoId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (
+        souCliente()
+        && request.resource.data.empresaId == minhaEmpresa()
+        && request.resource.data.criadoPor == request.auth.uid
+      );
+      allow update: if souAdmin() || (
+        souCliente()
+        && resource.data.empresaId == minhaEmpresa()
+        && request.resource.data.empresaId == minhaEmpresa()
+        && resource.data.criadoPor == request.auth.uid
+        && request.resource.data.atualizadoPor == request.auth.uid
+      );
+      allow delete: if souAdmin() || (
+        souCliente()
+        && resource.data.empresaId == minhaEmpresa()
+        && resource.data.criadoPor == request.auth.uid
+      );
+    }
+
     // Diário de bordo por empresa: horas contratadas, atividades e saldo.
     match /diario_bordo_config/{empresaId} {
       allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
