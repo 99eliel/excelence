@@ -146,7 +146,13 @@ service cloud.firestore {
       allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
-    // Apontamento de produção por empresa: quantidade de peças, valor de venda e total calculado.
+    // Produtos cadastrados pelo administrador para apontamento de produção.
+    match /empresa_produtos/{produtoId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
+    // Apontamento de produção por empresa: o usuário escolhe produto cadastrado e informa quantidade.
     match /empresa_apontamentos/{apontamentoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (
