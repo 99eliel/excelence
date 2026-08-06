@@ -1,7 +1,7 @@
 {
-  "version": "20260805-60",
+  "version": "20260806-61",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-05",
-  "message": "Apontamento de produção no ecossistema da empresa.",
-  "notes": "A aba Ecossistema da empresa agora possui uma área de apontamento de produção para registrar data, modelo, quantidade de peças, valor de venda por peça, total calculado, célula, cor, tamanho, gênero e ocorrências. O painel também mostra total de peças, valor total vendido e preço médio por peça."
+  "updatedAt": "2026-08-06",
+  "message": "Apontamento reorganizado com cadastro de produtos.",
+  "notes": "A área de apontamento no Ecossistema da empresa foi reorganizada: o administrador agora cadastra os produtos, referência, categoria, valor de venda e status ativo/inativo. A equipe da empresa lança a produção escolhendo o produto cadastrado e informando apenas a quantidade produzida. O sistema calcula automaticamente valor total, total de peças e preço médio."
 }
