@@ -152,6 +152,12 @@ service cloud.firestore {
       allow create, update, delete: if souAdmin();
     }
 
+    // Funcionários cadastrados pelo administrador para cálculo de minutos e horas no apontamento.
+    match /empresa_funcionarios/{funcionarioId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
     // Apontamento de produção por empresa: o usuário escolhe produto cadastrado e informa quantidade.
     match /empresa_apontamentos/{apontamentoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
