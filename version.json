@@ -1,7 +1,7 @@
 {
-  "version": "20260807-62",
+  "version": "20260807-63",
   "name": "Excellence System®",
   "updatedAt": "2026-08-07",
-  "message": "Apontamento com controle de horas trabalhadas.",
-  "notes": "Foi adicionada a etapa de funcionários no apontamento: o administrador cadastra manualmente os minutos diários de cada funcionário, e o lançamento de produção passa a marcar quem trabalhou. O sistema salva minutos trabalhados, horas, quantidade de pessoas, min/peça, peças por pessoa e resumo de tempo por apontamento."
+  "message": "Ecossistema limpo sem apontamento embutido.",
+  "notes": "A área de apontamento de produção foi retirada de dentro do Ecossistema documental para evitar excesso de informação e bagunça visual. Os arquivos antigos de apontamento continuam guardados no repositório, mas não são mais carregados na tela. A próxima etapa recomendada é transformar o apontamento em uma área própria e separada do Ecossistema."
 }
