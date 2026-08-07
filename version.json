@@ -1,7 +1,7 @@
 {
-  "version": "20260806-61",
+  "version": "20260807-62",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-06",
-  "message": "Apontamento reorganizado com cadastro de produtos.",
-  "notes": "A área de apontamento no Ecossistema da empresa foi reorganizada: o administrador agora cadastra os produtos, referência, categoria, valor de venda e status ativo/inativo. A equipe da empresa lança a produção escolhendo o produto cadastrado e informando apenas a quantidade produzida. O sistema calcula automaticamente valor total, total de peças e preço médio."
+  "updatedAt": "2026-08-07",
+  "message": "Apontamento com controle de horas trabalhadas.",
+  "notes": "Foi adicionada a etapa de funcionários no apontamento: o administrador cadastra manualmente os minutos diários de cada funcionário, e o lançamento de produção passa a marcar quem trabalhou. O sistema salva minutos trabalhados, horas, quantidade de pessoas, min/peça, peças por pessoa e resumo de tempo por apontamento."
 }
