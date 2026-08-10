@@ -1,7 +1,7 @@
 {
-  "version": "20260809-66",
+  "version": "20260809-67",
   "name": "Excellence System®",
   "updatedAt": "2026-08-09",
-  "message": "Correção na entrada do Apontamento.",
-  "notes": "Foi corrigido o comportamento do menu Apontamento: ao clicar, ele não abre mais automaticamente a última empresa usada ou a empresa teste. Agora sempre aparece primeiro a tela de seleção por cards/quadrados das empresas. Somente depois de escolher uma empresa o sistema abre os produtos, funcionários, minutos diários, produção e horas trabalhadas daquela empresa."
+  "message": "Apontamento limpo para usuário cliente.",
+  "notes": "No perfil de usuário comum/cliente, a faixa superior do apontamento foi limpa. Foram removidos botões e pílulas de Mudar empresa, Escolher outra empresa, Empresa selecionada e Atualizar dentro do apontamento. O cliente continua acessando somente a empresa vinculada ao próprio perfil, enquanto o administrador mantém a seleção por empresas."
 }
