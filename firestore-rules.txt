@@ -146,7 +146,7 @@ service cloud.firestore {
       allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
-    // Produtos cadastrados pelo administrador para apontamento de produção.
+    // Processos/produtos cadastrados pelo administrador para apontamento de produção.
     match /empresa_produtos/{produtoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
@@ -158,7 +158,13 @@ service cloud.firestore {
       allow create, update, delete: if souAdmin();
     }
 
-    // Apontamento de produção por empresa: o usuário escolhe produto cadastrado e informa quantidade.
+    // Equipes/células do apontamento. Admin monta a equipe; cliente apenas usa no lançamento da própria empresa.
+    match /empresa_equipes/{equipeId} {
+      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow create, update, delete: if souAdmin();
+    }
+
+    // Apontamento de produção por empresa: o usuário escolhe processo/produto, quantidade, equipe e minutos reais.
     match /empresa_apontamentos/{apontamentoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (
@@ -203,7 +209,6 @@ service cloud.firestore {
 
     match /anexos_empresa/{anexoId} {
       allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
-
       allow create, update, delete: if souAdmin();
     }
 
