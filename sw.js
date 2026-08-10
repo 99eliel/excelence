@@ -1,4 +1,4 @@
-const APP_VERSION = '20260807-63';
+const APP_VERSION = '20260809-64';
 const CACHE_NAME = `excellence-system-${APP_VERSION}`;
 
 self.addEventListener('install', event => {
