@@ -1,7 +1,7 @@
 {
-  "version": "20260809-67",
+  "version": "20260809-68",
   "name": "Excellence System®",
   "updatedAt": "2026-08-09",
-  "message": "Apontamento limpo para usuário cliente.",
-  "notes": "No perfil de usuário comum/cliente, a faixa superior do apontamento foi limpa. Foram removidos botões e pílulas de Mudar empresa, Escolher outra empresa, Empresa selecionada e Atualizar dentro do apontamento. O cliente continua acessando somente a empresa vinculada ao próprio perfil, enquanto o administrador mantém a seleção por empresas."
+  "message": "Apontamento reorganizado com equipes, minutos reais e relatórios.",
+  "notes": "O apontamento foi reorganizado em Lançar produção, Configurações e Relatórios. A tela de lançamento ficou mais limpa, processos/produtos usam valor unitário, funcionários têm minutos padrão editáveis no lançamento, equipes/células podem marcar funcionários automaticamente e os relatórios filtram por período, processo, equipe e funcionário. O cliente continua preso à própria empresa; o administrador mantém seleção por cards." 
 }
