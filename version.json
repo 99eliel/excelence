@@ -1,7 +1,7 @@
 {
-  "version": "20260807-63",
+  "version": "20260809-64",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-07",
-  "message": "Ecossistema limpo sem apontamento embutido.",
-  "notes": "A área de apontamento de produção foi retirada de dentro do Ecossistema documental para evitar excesso de informação e bagunça visual. Os arquivos antigos de apontamento continuam guardados no repositório, mas não são mais carregados na tela. A próxima etapa recomendada é transformar o apontamento em uma área própria e separada do Ecossistema."
+  "updatedAt": "2026-08-09",
+  "message": "Apontamento separado do Ecossistema.",
+  "notes": "O apontamento de produção voltou ao sistema em uma área própria no menu lateral, separado do Ecossistema documental. A nova tela concentra produtos, funcionários, minutos diários, lançamento de produção, horas trabalhadas, min/peça, peças por pessoa e valor por hora. O Ecossistema fica limpo apenas para documentos, pastas, arquivos e materiais."
 }
