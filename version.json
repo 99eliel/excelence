@@ -1,7 +1,7 @@
 {
-  "version": "20260809-65",
+  "version": "20260809-66",
   "name": "Excellence System®",
   "updatedAt": "2026-08-09",
-  "message": "Apontamento com seleção de empresa por cards.",
-  "notes": "Ao clicar em Apontamento, o sistema agora abre primeiro uma tela com cards/quadrados das empresas, no mesmo estilo da aba Empresas. Depois que a empresa é selecionada, aparecem os produtos, funcionários, minutos diários, lançamentos de produção e horas trabalhadas daquela empresa. O seletor antigo em lista foi escondido para deixar o fluxo mais claro."
+  "message": "Correção na entrada do Apontamento.",
+  "notes": "Foi corrigido o comportamento do menu Apontamento: ao clicar, ele não abre mais automaticamente a última empresa usada ou a empresa teste. Agora sempre aparece primeiro a tela de seleção por cards/quadrados das empresas. Somente depois de escolher uma empresa o sistema abre os produtos, funcionários, minutos diários, produção e horas trabalhadas daquela empresa."
 }
