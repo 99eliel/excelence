@@ -3,5 +3,5 @@
   "name": "Excellence System®",
   "updatedAt": "2026-08-15",
   "message": "Permissões por tela para usuários.",
-  "notes": "Foi adicionada uma área administrativa de Permissões. Agora o admin pode escolher quais telas cada usuário cliente pode acessar: Estrutura ISO, Ecossistema da empresa, Arquivos recebidos, Diário de bordo e Apontamento. Também foi adicionada a opção rápida Só apontamento. Usuários antigos sem permissões configuradas continuam com acesso completo até o admin salvar uma configuração. As regras do Firestore foram reforçadas para respeitar essas permissões nas coleções de cada área."
+  "notes": "Foi adicionada uma área administrativa de Permissões. Agora o admin pode escolher quais telas cada usuário cliente pode acessar: Estrutura ISO, Ecossistema da empresa, Arquivos recebidos, Diário de bordo e Apontamento. Também foi adicionada a opção rápida Só apontamento. Usuários antigos sem permissões configuradas continuam com acesso completo até o admin salvar uma configuração. As regras do Firestore e do Storage foram reforçadas para respeitar essas permissões nas coleções e arquivos de cada área."
 }
