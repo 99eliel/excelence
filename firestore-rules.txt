@@ -39,6 +39,26 @@ service cloud.firestore {
       return meuUsuario().data.empresaId;
     }
 
+    function temPermissao(area) {
+      return souAdmin() || (
+        souCliente()
+        && (
+          !meuUsuario().data.keys().hasAny(["permissoes"])
+          || meuUsuario().data.permissoes.hasAny([area])
+        )
+      );
+    }
+
+    function temAlgumaPermissao(areas) {
+      return souAdmin() || (
+        souCliente()
+        && (
+          !meuUsuario().data.keys().hasAny(["permissoes"])
+          || meuUsuario().data.permissoes.hasAny(areas)
+        )
+      );
+    }
+
     function podeAtivarPerfilPorConvite(userId) {
       return logado()
         && request.auth.uid == userId
@@ -67,7 +87,7 @@ service cloud.firestore {
     }
 
     function clienteAtualizaRecursoLiberado() {
-      return souCliente()
+      return temPermissao("ecossistema")
         && resource.data.empresaId == minhaEmpresa()
         && resource.data.clientePodeEditar == true
         && request.resource.data.empresaId == resource.data.empresaId
@@ -98,23 +118,23 @@ service cloud.firestore {
 
     match /respostas_iso/{respostaId} {
       allow get: if souAdmin() || (
-        souCliente()
+        temPermissao("estrutura_iso")
         && respostaId.matches('^' + minhaEmpresa() + '_.*$')
       );
 
       allow list: if souAdmin() || (
-        souCliente()
+        temPermissao("estrutura_iso")
         && resource.data.empresaId == minhaEmpresa()
       );
 
       allow create: if souAdmin() || (
-        souCliente()
+        temPermissao("estrutura_iso")
         && request.resource.data.empresaId == minhaEmpresa()
         && request.resource.data.requisitoId in ["4_1", "4_2"]
       );
 
       allow update: if souAdmin() || (
-        souCliente()
+        temPermissao("estrutura_iso")
         && resource.data.empresaId == minhaEmpresa()
         && request.resource.data.empresaId == minhaEmpresa()
         && request.resource.data.requisitoId in ["4_1", "4_2"]
@@ -126,7 +146,8 @@ service cloud.firestore {
 
     match /arquivos/{arquivoId} {
       allow read: if souAdmin() || (
-        souCliente() && (
+        temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso", "ecossistema"])
+        && (
           (resource.data.categoria == "material_apoio" && resource.data.publico == true) ||
           (resource.data.empresaId == minhaEmpresa())
         )
@@ -136,51 +157,51 @@ service cloud.firestore {
     }
 
     match /empresa_pastas/{pastaId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("ecossistema") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
     match /empresa_recursos/{recursoId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("ecossistema") && resource.data.empresaId == minhaEmpresa());
       allow create, delete: if souAdmin();
       allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
     // Processos/produtos cadastrados pelo administrador para apontamento de produção.
     match /empresa_produtos/{produtoId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
     // Funcionários cadastrados pelo administrador para cálculo de minutos e horas no apontamento.
     match /empresa_funcionarios/{funcionarioId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
     // Equipes/células do apontamento. Admin monta a equipe; cliente apenas usa no lançamento da própria empresa.
     match /empresa_equipes/{equipeId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
     // Apontamento de produção por empresa: o usuário escolhe processo/produto, quantidade, equipe e minutos reais.
     match /empresa_apontamentos/{apontamentoId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (
-        souCliente()
+        temPermissao("apontamento")
         && request.resource.data.empresaId == minhaEmpresa()
         && request.resource.data.criadoPor == request.auth.uid
       );
       allow update: if souAdmin() || (
-        souCliente()
+        temPermissao("apontamento")
         && resource.data.empresaId == minhaEmpresa()
         && request.resource.data.empresaId == minhaEmpresa()
         && resource.data.criadoPor == request.auth.uid
         && request.resource.data.atualizadoPor == request.auth.uid
       );
       allow delete: if souAdmin() || (
-        souCliente()
+        temPermissao("apontamento")
         && resource.data.empresaId == minhaEmpresa()
         && resource.data.criadoPor == request.auth.uid
       );
@@ -188,18 +209,19 @@ service cloud.firestore {
 
     // Diário de bordo por empresa: horas contratadas, atividades e saldo.
     match /diario_bordo_config/{empresaId} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temPermissao("diario_bordo") && minhaEmpresa() == empresaId);
       allow create, update, delete: if souAdmin();
     }
 
     match /diario_bordo_atividades/{atividadeId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (temPermissao("diario_bordo") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
     match /materiais_apoio/{materialId} {
       allow read: if souAdmin() || (
-        souCliente() && (
+        temAlgumaPermissao(["estrutura_iso", "ecossistema"])
+        && (
           resource.data.publico == true ||
           resource.data.empresaId == minhaEmpresa()
         )
@@ -208,7 +230,10 @@ service cloud.firestore {
     }
 
     match /anexos_empresa/{anexoId} {
-      allow read: if souAdmin() || (souCliente() && resource.data.empresaId == minhaEmpresa());
+      allow read: if souAdmin() || (
+        temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"])
+        && resource.data.empresaId == minhaEmpresa()
+      );
       allow create, update, delete: if souAdmin();
     }
 
