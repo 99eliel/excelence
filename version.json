@@ -1,7 +1,7 @@
 {
-  "version": "20260815-70",
+  "version": "20260815-71",
   "name": "Excellence System®",
   "updatedAt": "2026-08-15",
-  "message": "Impressão caprichada do relatório de apontamento.",
-  "notes": "A impressão do apontamento deixou de imprimir a tela inteira do sistema. Agora o botão Imprimir gera um relatório próprio e mais profissional, com cabeçalho do Excellence System®, empresa, período, filtros aplicados, indicadores, tabela limpa dos lançamentos, resumo final e área de assinatura. O layout usa A4 horizontal para caber melhor a tabela do apontamento."
+  "message": "Permissões por tela para usuários.",
+  "notes": "Foi adicionada uma área administrativa de Permissões. Agora o admin pode escolher quais telas cada usuário cliente pode acessar: Estrutura ISO, Ecossistema da empresa, Arquivos recebidos, Diário de bordo e Apontamento. Também foi adicionada a opção rápida Só apontamento. Usuários antigos sem permissões configuradas continuam com acesso completo até o admin salvar uma configuração. As regras do Firestore foram reforçadas para respeitar essas permissões nas coleções de cada área."
 }
