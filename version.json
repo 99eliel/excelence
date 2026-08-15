@@ -1,7 +1,7 @@
 {
-  "version": "20260809-69",
+  "version": "20260815-70",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-09",
-  "message": "Apontamento com múltiplas células no mesmo lançamento.",
-  "notes": "No lançamento de produção, agora é possível selecionar uma ou mais equipes/células para o mesmo produto/processo. O sistema junta automaticamente os funcionários das equipes marcadas, evita duplicidade de funcionário repetido, permite ajustar os minutos reais individualmente e salva equipeIds, equipeNomes e celulas no histórico. O relatório também filtra lançamentos que tenham qualquer uma das equipes selecionadas."
+  "updatedAt": "2026-08-15",
+  "message": "Impressão caprichada do relatório de apontamento.",
+  "notes": "A impressão do apontamento deixou de imprimir a tela inteira do sistema. Agora o botão Imprimir gera um relatório próprio e mais profissional, com cabeçalho do Excellence System®, empresa, período, filtros aplicados, indicadores, tabela limpa dos lançamentos, resumo final e área de assinatura. O layout usa A4 horizontal para caber melhor a tabela do apontamento."
 }
