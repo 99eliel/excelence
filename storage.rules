@@ -35,6 +35,26 @@ service firebase.storage {
       return meuUsuario().empresaId;
     }
 
+    function temPermissao(area) {
+      return souAdmin() || (
+        souCliente()
+        && (
+          !meuUsuario().keys().hasAny(["permissoes"])
+          || meuUsuario().permissoes.hasAny([area])
+        )
+      );
+    }
+
+    function temAlgumaPermissao(areas) {
+      return souAdmin() || (
+        souCliente()
+        && (
+          !meuUsuario().keys().hasAny(["permissoes"])
+          || meuUsuario().permissoes.hasAny(areas)
+        )
+      );
+    }
+
     function tamanhoPermitido() {
       return request.resource.size < 30 * 1024 * 1024;
     }
@@ -51,7 +71,7 @@ service firebase.storage {
     }
 
     function recursoClienteLiberado(empresaId, recursoId, tipo) {
-      return souCliente()
+      return temPermissao("ecossistema")
         && minhaEmpresa() == empresaId
         && firestore.exists(recursoPath(recursoId))
         && firestore.get(recursoPath(recursoId)).data.empresaId == empresaId
@@ -71,7 +91,7 @@ service firebase.storage {
 
     // Materiais gerais de apoio: modelos, exemplos, ISO completa e orientações liberadas pela administração.
     match /materiais-apoio/{allPaths=**} {
-      allow read: if temPerfil();
+      allow read: if souAdmin() || temAlgumaPermissao(["estrutura_iso", "ecossistema"]);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
@@ -83,7 +103,7 @@ service firebase.storage {
 
     // Ecossistema documental da empresa: pastas internas com PDF/Word enviados pela administração.
     match /empresas/{empresaId}/ecossistema/{allPaths=**} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temPermissao("ecossistema") && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
@@ -91,7 +111,7 @@ service firebase.storage {
     // Uploads liberados pela administração para usuários da própria empresa.
     // O caminho contém o item liberado: empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/arquivo
     match /empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/{allPaths=**} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temPermissao("ecossistema") && minhaEmpresa() == empresaId);
       allow create, update: if request.auth.uid == userId
         && recursoClienteLiberado(empresaId, recursoId, tipo)
         && tamanhoPermitido()
@@ -104,21 +124,21 @@ service firebase.storage {
 
     // Caminho antigo de documentos/evidências da empresa.
     match /empresas/{empresaId}/documentos-empresa/{allPaths=**} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
     // Arquivos que a consultoria devolve para a empresa: corrigidos, aprovados ou personalizados.
     match /empresas/{empresaId}/consultoria/{allPaths=**} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
     // Caminho antigo de evidências, mantido para leitura de arquivos legados.
     match /empresas/{empresaId}/{requisitoId}/evidencias/{allPaths=**} {
-      allow read: if souAdmin() || (souCliente() && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temPermissao("estrutura_iso") && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
