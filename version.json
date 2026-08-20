@@ -1,7 +1,7 @@
 {
-  "version": "20260820-77",
+  "version": "20260820-78",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Impressão executiva do Apontamento redesenhada.",
-  "notes": "A impressão do relatório de Apontamento foi reconstruída para não reaproveitar as grandes áreas dos gráficos da tela. A evolução mensal e o mix de produção agora aparecem lado a lado em blocos compactos, com gráficos menores e tabelas resumidas, mantendo todos os dados. Os indicadores gerais ficam em faixa única e os lançamentos detalhados permanecem completos na parte inferior. O objetivo é eliminar espaços vazios e melhorar a leitura em uma única página quando o volume de lançamentos permitir."
+  "message": "Novo módulo de Gestão de Treinamentos, Competências e Desenvolvimento.",
+  "notes": "Foi adicionada a área Treinamentos com visão geral, plano anual, matriz de competências, realizações, colaboradores, integração, PID e carreira/evolução profissional. A estrutura foi orientada pelos modelos FQ-061, FQ-062, FQ-063, FQ-064 e pelo PR-007 de Integração. O módulo possui permissão independente por usuário, reaproveitamento de colaboradores do Apontamento, registro de evidências e regras de segurança por empresa."
 }
