@@ -1,7 +1,7 @@
 {
-  "version": "20260820-78",
+  "version": "20260820-79",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Novo módulo de Gestão de Treinamentos, Competências e Desenvolvimento.",
-  "notes": "Foi adicionada a área Treinamentos com visão geral, plano anual, matriz de competências, realizações, colaboradores, integração, PID e carreira/evolução profissional. A estrutura foi orientada pelos modelos FQ-061, FQ-062, FQ-063, FQ-064 e pelo PR-007 de Integração. O módulo possui permissão independente por usuário, reaproveitamento de colaboradores do Apontamento, registro de evidências e regras de segurança por empresa."
+  "message": "Entrada do módulo de Treinamentos corrigida no menu lateral.",
+  "notes": "A área Treinamentos agora tem entrada explícita no menu lateral. A versão 79 garante o botão de acesso, respeita a permissão treinamentos e carrega o módulo de Gestão de Treinamentos, Competências e Desenvolvimento ao clicar."
 }
