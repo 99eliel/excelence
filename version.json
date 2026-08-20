@@ -1,7 +1,7 @@
 {
-  "version": "20260820-73",
+  "version": "20260820-74",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Relatório gerencial do apontamento com mix de produção.",
-  "notes": "O relatório de Apontamento agora consolida todas as peças produzidas dentro dos filtros selecionados, mostra a quantidade de cada peça, a porcentagem que ela representa no total produzido, identifica a peça de maior participação e a concentração das três mais produzidas. Também foi incluído um gráfico horizontal de participação e uma tabela completa do mix. A impressão foi atualizada para levar a mesma visão gerencial junto com os lançamentos detalhados, sem criar leituras extras no Firebase."
+  "message": "Evolução da produção média diária por mês no Apontamento.",
+  "notes": "O relatório gerencial de Apontamento agora calcula a produção média diária de cada mês usando o total produzido dividido pelos dias com produção registrada. A nova visão mostra gráfico mensal, média histórica, último mês com dados, evolução percentual contra a média histórica, produção do último mês, dias produtivos e variação contra o mês anterior. Meses parciais são identificados e meses sem dados não são tratados como zero. A impressão também incorpora essa visão gerencial, sem leituras extras no Firebase."
 }
