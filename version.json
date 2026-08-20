@@ -1,7 +1,7 @@
 {
-  "version": "20260815-72",
+  "version": "20260820-73",
   "name": "Excellence System®",
-  "updatedAt": "2026-08-15",
-  "message": "Mostrar e ocultar senha no login.",
-  "notes": "A tela de login agora possui um botão com ícone de olho dentro do campo de senha. O usuário pode alternar entre mostrar e ocultar a senha digitada sem alterar o fluxo de autenticação."
+  "updatedAt": "2026-08-20",
+  "message": "Relatório gerencial do apontamento com mix de produção.",
+  "notes": "O relatório de Apontamento agora consolida todas as peças produzidas dentro dos filtros selecionados, mostra a quantidade de cada peça, a porcentagem que ela representa no total produzido, identifica a peça de maior participação e a concentração das três mais produzidas. Também foi incluído um gráfico horizontal de participação e uma tabela completa do mix. A impressão foi atualizada para levar a mesma visão gerencial junto com os lançamentos detalhados, sem criar leituras extras no Firebase."
 }
