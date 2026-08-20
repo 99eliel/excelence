@@ -66,6 +66,17 @@ service firebase.storage {
         || request.resource.contentType == "application/octet-stream";
     }
 
+    function tipoEvidenciaTreinamentoPermitido() {
+      return request.resource.contentType == "application/pdf"
+        || request.resource.contentType == "application/msword"
+        || request.resource.contentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        || request.resource.contentType == "application/vnd.ms-excel"
+        || request.resource.contentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        || request.resource.contentType == "image/jpeg"
+        || request.resource.contentType == "image/png"
+        || request.resource.contentType == "application/octet-stream";
+    }
+
     function uploadPermitido() {
       return souAdmin() && tamanhoPermitido() && tipoArquivoPermitido();
     }
@@ -82,34 +93,28 @@ service firebase.storage {
         );
     }
 
-    // Cofre interno da administração: materiais avulsos que não devem aparecer para clientes.
     match /cofre-admin/{allPaths=**} {
       allow read: if souAdmin();
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
-    // Materiais gerais de apoio: modelos, exemplos, ISO completa e orientações liberadas pela administração.
     match /materiais-apoio/{allPaths=**} {
       allow read: if souAdmin() || temAlgumaPermissao(["estrutura_iso", "ecossistema"]);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
-    // Caminho legado de materiais por empresa. A nova lógica mantém material de apoio no cofre da administração.
     match /empresas/{empresaId}/materiais-apoio/{allPaths=**} {
       allow read, write: if souAdmin();
     }
 
-    // Ecossistema documental da empresa: pastas internas com PDF/Word enviados pela administração.
     match /empresas/{empresaId}/ecossistema/{allPaths=**} {
       allow read: if souAdmin() || (temPermissao("ecossistema") && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
-    // Uploads liberados pela administração para usuários da própria empresa.
-    // O caminho contém o item liberado: empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/arquivo
     match /empresas/{empresaId}/cliente-uploads/{recursoId}/{userId}/{tipo}/{allPaths=**} {
       allow read: if souAdmin() || (temPermissao("ecossistema") && minhaEmpresa() == empresaId);
       allow create, update: if request.auth.uid == userId
@@ -122,21 +127,27 @@ service firebase.storage {
       );
     }
 
-    // Caminho antigo de documentos/evidências da empresa.
+    // Evidências de treinamentos: listas, provas, certificados, fotos e planilhas de apoio.
+    match /empresas/{empresaId}/treinamentos/{allPaths=**} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId);
+      allow create, update: if (souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId))
+        && tamanhoPermitido()
+        && tipoEvidenciaTreinamentoPermitido();
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId);
+    }
+
     match /empresas/{empresaId}/documentos-empresa/{allPaths=**} {
       allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
-    // Arquivos que a consultoria devolve para a empresa: corrigidos, aprovados ou personalizados.
     match /empresas/{empresaId}/consultoria/{allPaths=**} {
       allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
-    // Caminho antigo de evidências, mantido para leitura de arquivos legados.
     match /empresas/{empresaId}/{requisitoId}/evidencias/{allPaths=**} {
       allow read: if souAdmin() || (temPermissao("estrutura_iso") && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
