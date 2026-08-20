@@ -1,7 +1,7 @@
 {
-  "version": "20260820-79",
+  "version": "20260820-80",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Entrada do módulo de Treinamentos corrigida no menu lateral.",
-  "notes": "A área Treinamentos agora tem entrada explícita no menu lateral. A versão 79 garante o botão de acesso, respeita a permissão treinamentos e carrega o módulo de Gestão de Treinamentos, Competências e Desenvolvimento ao clicar."
+  "message": "Treinamentos garantido no menu administrativo.",
+  "notes": "A entrada de Treinamentos foi reforçada no menu lateral do painel administrativo e ganhou carregamento independente do controlador anterior. Ao clicar, o sistema carrega o módulo e tenta abrir diretamente sua visão principal."
 }
