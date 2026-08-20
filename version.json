@@ -1,7 +1,7 @@
 {
-  "version": "20260820-75",
+  "version": "20260820-76",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Nova interface para registrar apontamentos de produção.",
-  "notes": "A tela de Registrar Apontamento foi reorganizada em quatro etapas visuais: produção, equipe e tempo, observações e conferência/salvamento. O resumo do lançamento agora fica em um painel destacado e responsivo, os campos opcionais foram recolhidos, funcionários e equipes ganharam melhor hierarquia visual e o histórico ficou mais compacto, com opção de expandir quando houver muitos registros. A lógica de cálculo e salvamento foi preservada."
+  "message": "Relatório de Apontamento mais compacto para impressão.",
+  "notes": "A impressão do relatório de Apontamento foi reorganizada para reduzir o número de páginas sem remover informações únicas. Os indicadores gerais ficaram em faixa compacta, o gráfico de média diária foi reduzido, o mix de produção passou a ocupar duas colunas e os lançamentos detalhados usam tabela mais densa. A tabela duplicada do mix foi removida apenas da impressão porque nome, quantidade, ranking e percentual já permanecem integralmente no gráfico. A meta é reduzir relatórios típicos de cerca de quatro páginas para uma ou duas páginas, dependendo da quantidade de lançamentos filtrados."
 }
