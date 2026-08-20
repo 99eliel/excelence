@@ -1,7 +1,7 @@
 {
-  "version": "20260820-74",
+  "version": "20260820-75",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Evolução da produção média diária por mês no Apontamento.",
-  "notes": "O relatório gerencial de Apontamento agora calcula a produção média diária de cada mês usando o total produzido dividido pelos dias com produção registrada. A nova visão mostra gráfico mensal, média histórica, último mês com dados, evolução percentual contra a média histórica, produção do último mês, dias produtivos e variação contra o mês anterior. Meses parciais são identificados e meses sem dados não são tratados como zero. A impressão também incorpora essa visão gerencial, sem leituras extras no Firebase."
+  "message": "Nova interface para registrar apontamentos de produção.",
+  "notes": "A tela de Registrar Apontamento foi reorganizada em quatro etapas visuais: produção, equipe e tempo, observações e conferência/salvamento. O resumo do lançamento agora fica em um painel destacado e responsivo, os campos opcionais foram recolhidos, funcionários e equipes ganharam melhor hierarquia visual e o histórico ficou mais compacto, com opção de expandir quando houver muitos registros. A lógica de cálculo e salvamento foi preservada."
 }
