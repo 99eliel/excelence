@@ -1,5 +1,5 @@
 (function () {
-  const APP_VERSION = window.EXCELLENCE_SYSTEM_VERSION || '20260820-74';
+  const APP_VERSION = window.EXCELLENCE_SYSTEM_VERSION || '20260820-75';
   const RELOAD_KEY = 'excellence-system-reloaded-version';
   const CHECK_INTERVAL = 60 * 1000;
 
