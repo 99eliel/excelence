@@ -167,25 +167,21 @@ service cloud.firestore {
       allow update: if souAdmin() || clienteAtualizaRecursoLiberado();
     }
 
-    // Processos/produtos cadastrados pelo administrador para apontamento de produção.
     match /empresa_produtos/{produtoId} {
       allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
-    // Funcionários cadastrados pelo administrador para cálculo de minutos e horas no apontamento.
     match /empresa_funcionarios/{funcionarioId} {
       allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
-    // Equipes/células do apontamento. Admin monta a equipe; cliente apenas usa no lançamento da própria empresa.
     match /empresa_equipes/{equipeId} {
       allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create, update, delete: if souAdmin();
     }
 
-    // Apontamento de produção por empresa: o usuário escolhe processo/produto, quantidade, equipe e minutos reais.
     match /empresa_apontamentos/{apontamentoId} {
       allow read: if souAdmin() || (temPermissao("apontamento") && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (
@@ -207,7 +203,56 @@ service cloud.firestore {
       );
     }
 
-    // Diário de bordo por empresa: horas contratadas, atividades e saldo.
+    // Gestão de treinamentos e competências. Usuários liberados trabalham apenas na própria empresa.
+    match /empresa_treinamentos/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_colaboradores/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_matriz_competencias/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_treinamento_eventos/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_integracoes/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_pids/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
+    match /empresa_carreiras/{registroId} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+      allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
+      allow update: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa() && request.resource.data.empresaId == minhaEmpresa());
+      allow delete: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
+    }
+
     match /diario_bordo_config/{empresaId} {
       allow read: if souAdmin() || (temPermissao("diario_bordo") && minhaEmpresa() == empresaId);
       allow create, update, delete: if souAdmin();
