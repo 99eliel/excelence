@@ -1,7 +1,7 @@
 {
-  "version": "20260821-88",
+  "version": "20260821-89",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Cadastro central de funcionários por empresa.",
-  "notes": "Foi criada uma base central de funcionários com nome, CPF, data de nascimento, cargo/função, setor, admissão, situação e observações. O cadastro central sincroniza os funcionários usados em Treinamentos sem apagar históricos existentes, preserva vínculos já concluídos e permite ficha individual com resumo de treinamentos, eficácia, PID, integração e carreira. No painel administrativo há uma nova entrada Funcionários, e a opção Funcionários dentro de Treinamentos direciona para esta base central."
+  "message": "Funcionários agora sempre inicia pela escolha da empresa.",
+  "notes": "Ao abrir a área central de Funcionários no painel administrativo, o sistema não reutiliza mais automaticamente a última empresa acessada. A tela sempre começa pela seleção da empresa. O mesmo comportamento foi aplicado ao acesso de Funcionários vindo de Treinamentos; somente chamadas internas que informem uma empresa de forma explícita podem abrir a base diretamente."
 }
