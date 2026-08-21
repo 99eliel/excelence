@@ -1,7 +1,7 @@
 {
-  "version": "20260821-87",
+  "version": "20260821-88",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Treinamentos reorganizados em cards independentes com relatorios gerais separados.",
-  "notes": "Cada treinamento agora possui seu proprio card e avanca de forma independente pelas fases de publico, realizacao e eficacia, sem ser bloqueado por outros treinamentos em aberto. Funcionarios continuam em cadastro compartilhado. A area Relatorios foi separada do fluxo e permite escolher um treinamento especifico ou todos, selecionar o tipo de relatorio, aplicar filtros e imprimir ou salvar em PDF. Integracao, PID e carreira permanecem em Gestao continua."
+  "message": "Cadastro central de funcionários por empresa.",
+  "notes": "Foi criada uma base central de funcionários com nome, CPF, data de nascimento, cargo/função, setor, admissão, situação e observações. O cadastro central sincroniza os funcionários usados em Treinamentos sem apagar históricos existentes, preserva vínculos já concluídos e permite ficha individual com resumo de treinamentos, eficácia, PID, integração e carreira. No painel administrativo há uma nova entrada Funcionários, e a opção Funcionários dentro de Treinamentos direciona para esta base central."
 }
