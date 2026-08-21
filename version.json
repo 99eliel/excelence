@@ -1,7 +1,7 @@
 {
-  "version": "20260821-83",
+  "version": "20260821-84",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Treinamentos ganhou fluxo guiado e mais intuitivo.",
-  "notes": "A área de Treinamentos agora orienta o usuário passo a passo: primeiro cadastrar treinamentos, depois funcionários, definir público e gerar matriz, registrar realizações, avaliar eficácia e acompanhar desenvolvimento. A tela mostra progresso da configuração inicial, próximo passo recomendado, indicadores por etapa e navegação reorganizada com linguagem mais simples."
+  "message": "Treinamentos reconstruído na raiz como fluxo sequencial.",
+  "notes": "O módulo de Treinamentos deixou de usar camadas de fluxo sobre uma tela de abas. Agora existe uma única implementação raiz em treinamentos.js. O usuário vê somente a etapa atual e as etapas já concluídas: primeiro Treinamentos, depois Funcionários, depois definição de Público, depois Realizações e por último Eficácia. Etapas futuras permanecem ocultas até que os requisitos anteriores sejam concluídos. Matriz, PID e demais automações continuam integradas, mas sem poluir o fluxo principal."
 }
