@@ -1,7 +1,7 @@
 {
-  "version": "20260821-84",
+  "version": "20260821-85",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Treinamentos reconstruído na raiz como fluxo sequencial.",
-  "notes": "O módulo de Treinamentos deixou de usar camadas de fluxo sobre uma tela de abas. Agora existe uma única implementação raiz em treinamentos.js. O usuário vê somente a etapa atual e as etapas já concluídas: primeiro Treinamentos, depois Funcionários, depois definição de Público, depois Realizações e por último Eficácia. Etapas futuras permanecem ocultas até que os requisitos anteriores sejam concluídos. Matriz, PID e demais automações continuam integradas, mas sem poluir o fluxo principal."
+  "message": "Seleção de pessoas dos treinamentos redesenhada.",
+  "notes": "A etapa de definição de público foi melhorada diretamente na raiz de treinamentos.js. A janela agora possui busca em tempo real por nome, função ou setor, cartões de colaboradores mais legíveis, checkbox corretamente alinhado, avatar por iniciais, contador de selecionados e exibidos, ações para selecionar ou limpar apenas os colaboradores visíveis e indicação visual dos itens marcados. O fluxo sequencial e as automações da matriz permanecem preservados."
 }
