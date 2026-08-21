@@ -7,7 +7,6 @@ const COMPANY_SESSION = 'excellence-training-company-v82';
 const state = { user:null, perfil:null, empresaId:'', timer:null, busy:false, cacheAt:0, cache:null };
 
 const text = el => String(el?.textContent || '').replace(/\s+/g,' ').trim();
-const low = el => text(el).toLowerCase();
 const norm = v => String(v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 const esc = (v='') => String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
 
@@ -21,7 +20,7 @@ function injectStyle(){
     .tr83-next{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:linear-gradient(135deg,#073F5A,#0b607f);color:#fff;border-radius:16px;padding:14px 16px;margin-bottom:14px}.tr83-next-num{width:42px;height:42px;border-radius:13px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px;font-weight:900}.tr83-next h3{margin:0 0 3px;font-size:17px}.tr83-next p{margin:0;color:#dcecf2;font-size:13px}.tr83-next button{border:0;border-radius:11px;padding:10px 13px;background:#f0c760;color:#173846;font-weight:900;cursor:pointer;white-space:nowrap}
     .tr83-steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.tr83-step{position:relative;border:1px solid #dbe7eb;background:#f9fbfc;border-radius:14px;padding:12px;text-align:left;cursor:pointer;min-height:104px;transition:.15s ease}.tr83-step:hover{transform:translateY(-1px);border-color:#83b6c8}.tr83-step.done{background:#f4fbf6;border-color:#bfe0c8}.tr83-step.current{background:#fff9e8;border-color:#e8c668}.tr83-step.warn{background:#fff5f3;border-color:#e4b7ae}.tr83-step .n{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#e8f1f4;color:#073F5A;font-weight:900;font-size:12px;margin-bottom:8px}.tr83-step.done .n{background:#dcefe2;color:#1f6b37}.tr83-step.current .n{background:#f4d98d;color:#6b4b00}.tr83-step strong{display:block;color:#163b49;font-size:13px;margin-bottom:4px}.tr83-step small{display:block;color:#6b808b;line-height:1.25}.tr83-step .status{margin-top:7px;font-weight:850;color:#073F5A;font-size:11px}
     .tr83-context{margin:8px 0 12px;padding:11px 13px;border-radius:13px;background:#f4f8fa;border-left:4px solid #0b6f93;color:#345865}.tr83-context strong{color:#073F5A}.tr83-context small{display:block;margin-top:3px;color:#647d88}
-    .tr81-tabs{order:initial}.tr81-tab[data-tr83-advanced="1"]{opacity:.82}.tr81-tab[data-tr81-tab="visao"]{font-weight:900}
+    .tr81-tab[data-tr83-advanced="1"]{opacity:.82}.tr81-tab[data-tr81-tab="visao"]{font-weight:900}
     @media(max-width:1150px){.tr83-steps{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:720px){.tr83-guide-head{display:block}.tr83-progress{margin-top:12px}.tr83-next{grid-template-columns:auto 1fr}.tr83-next button{grid-column:1/-1;width:100%}.tr83-steps{grid-template-columns:1fr 1fr}}
     @media(max-width:460px){.tr83-steps{grid-template-columns:1fr}}
@@ -63,7 +62,7 @@ async function progress(force=false){
     qcol('empresa_treinamento_eventos',id), qcol('empresa_pids',id), qcol('empresa_integracoes',id)
   ]);
   const publicPending=plans.filter(p=>p.publicoDefinido!==true).length;
-  const applicable=matrix.filter(m=>m.aplicavel!==false && !['nao aplicavel','não aplicável'].includes(norm(m.status)));
+  const applicable=matrix.filter(m=>m.aplicavel!==false && norm(m.status)!=='nao aplicavel');
   const matrixPending=applicable.filter(m=>norm(m.status)!=='concluido').length;
   const efficacyPending=applicable.filter(m=>norm(m.status)==='concluido' && norm(m.eficaciaStatus)!=='eficaz').length;
   const openPids=pids.filter(p=>!['concluido','fechado'].includes(norm(p.status))).length;
@@ -77,10 +76,11 @@ function tab(id){ return document.querySelector(`.tr81-tabs [data-tr81-tab="${id
 function openTab(id){ const b=tab(id); if(b) b.click(); }
 
 function arrangeTabs(){
-  const nav=document.querySelector('.tr81-tabs'); if(!nav) return;
+  const nav=document.querySelector('.tr81-tabs'); if(!nav || nav.dataset.tr83Arranged==='1') return;
   const order=['visao','plano','colaboradores','matriz','realizacoes','integracao','pid','carreira'];
   const labels={visao:'Resumo',plano:'1. Treinamentos',colaboradores:'2. Funcionários',matriz:'3. Público e matriz',realizacoes:'4. Realizações',integracao:'Integração',pid:'PID',carreira:'Carreira'};
   order.forEach(id=>{const b=tab(id);if(b){b.textContent=labels[id]||b.textContent;b.dataset.tr83Advanced=['integracao','pid','carreira'].includes(id)?'1':'0';nav.appendChild(b)}});
+  nav.dataset.tr83Arranged='1';
 }
 
 function nextStep(d){
@@ -101,11 +101,14 @@ function runAction(step){
 function stepClass(done,current,warn=false){ return ['tr83-step',done?'done':'',current?'current':'',warn?'warn':''].filter(Boolean).join(' '); }
 
 function renderGuide(d){
-  const root=document.querySelector('.tr81'); const nav=document.querySelector('.tr81-tabs'); if(!root||!nav) return;
-  document.querySelector('[data-tr83-guide]')?.remove();
+  const nav=document.querySelector('.tr81-tabs'); if(!nav) return;
   const next=nextStep(d);
   const setupPercent=Math.round((d.basicDone/3)*100);
   const audienceDone=d.plans.length>0&&d.cols.length>0&&d.publicPending===0;
+  const sig=[d.empresaId,d.plans.length,d.cols.length,d.publicPending,d.matrixPending,d.events.length,d.efficacyPending,d.openPids,next.n].join('|');
+  const current=document.querySelector('[data-tr83-guide]');
+  if(current?.dataset.tr83Sig===sig) return;
+  current?.remove();
   const steps=[
     {n:1,title:'Treinamentos',sub:'Cadastre o que será ensinado.',status:`${d.plans.length} cadastrado(s)`,done:d.plans.length>0,tab:'plano'},
     {n:2,title:'Funcionários',sub:'Importe ou cadastre as pessoas.',status:`${d.cols.length} funcionário(s)`,done:d.cols.length>0,tab:'colaboradores'},
@@ -114,7 +117,7 @@ function renderGuide(d){
     {n:5,title:'Eficácia',sub:'Confirme se o aprendizado funcionou.',status:d.efficacyPending?`${d.efficacyPending} aguardando`:(d.events.length?'Em dia':'Aguardando realização'),done:d.events.length>0&&d.efficacyPending===0,tab:'realizacoes'},
     {n:6,title:'Desenvolvimento',sub:'PID, integração e carreira quando necessário.',status:d.openPids?`${d.openPids} PID(s) aberto(s)`:'Sob demanda',done:false,warn:d.openPids>0,tab:d.openPids?'pid':'integracao'}
   ];
-  const box=document.createElement('section');box.className='tr83-guide';box.dataset.tr83Guide='1';
+  const box=document.createElement('section');box.className='tr83-guide';box.dataset.tr83Guide='1';box.dataset.tr83Sig=sig;
   box.innerHTML=`
     <div class="tr83-guide-head"><div><h2>Fluxo guiado</h2><p>O sistema mostra a ordem recomendada. Você não precisa decorar as abas: conclua um passo e siga para o próximo.</p></div>
       <div class="tr83-progress"><div class="tr83-progress-top"><span>Configuração inicial</span><strong>${setupPercent}%</strong></div><div class="tr83-progress-bar"><span style="width:${setupPercent}%"></span></div></div></div>
@@ -126,9 +129,11 @@ function renderGuide(d){
 }
 
 function renderContext(){
-  document.querySelector('[data-tr83-context]')?.remove();
   const nav=document.querySelector('.tr81-tabs');if(!nav)return;
   const active=tabs().find(b=>b.classList.contains('active'))?.dataset.tr81Tab || '';
+  const old=document.querySelector('[data-tr83-context]');
+  if(old?.dataset.tr83Context===active) return;
+  old?.remove();
   const messages={
     visao:['Resumo do módulo','Veja o que está pendente e use o Fluxo guiado para continuar de onde parou.'],
     plano:['Passo 1 — Treinamentos','Primeiro cadastre os treinamentos. Depois use “Definir público” em cada um para indicar quais funcionários precisam realizá-lo.'],
@@ -140,7 +145,7 @@ function renderContext(){
     carreira:['Acompanhamento — Carreira','Área de desenvolvimento de médio e longo prazo; não é necessária para iniciar o fluxo de treinamentos.']
   };
   const m=messages[active];if(!m)return;
-  const el=document.createElement('div');el.className='tr83-context';el.dataset.tr83Context='1';el.innerHTML=`<strong>${esc(m[0])}</strong><small>${esc(m[1])}</small>`;
+  const el=document.createElement('div');el.className='tr83-context';el.dataset.tr83Context=active;el.innerHTML=`<strong>${esc(m[0])}</strong><small>${esc(m[1])}</small>`;
   nav.insertAdjacentElement('afterend',el);
 }
 
