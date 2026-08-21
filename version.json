@@ -1,7 +1,7 @@
 {
-  "version": "20260821-85",
+  "version": "20260821-86",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Seleção de pessoas dos treinamentos redesenhada.",
-  "notes": "A etapa de definição de público foi melhorada diretamente na raiz de treinamentos.js. A janela agora possui busca em tempo real por nome, função ou setor, cartões de colaboradores mais legíveis, checkbox corretamente alinhado, avatar por iniciais, contador de selecionados e exibidos, ações para selecionar ou limpar apenas os colaboradores visíveis e indicação visual dos itens marcados. O fluxo sequencial e as automações da matriz permanecem preservados."
+  "message": "Treinamentos ganhou resultados, relatórios, evidências e dossiê de auditoria.",
+  "notes": "Após a conclusão da eficácia, o fluxo libera a etapa 6 Resultados. Nela há relatório geral, relatório por treinamento, dossiê por funcionário, matriz de competências, pendências e atrasados, relatório de eficácia, central de evidências e dossiê de auditoria. Todos possuem filtros por período, treinamento, funcionário, setor e status, além de impressão/Salvar PDF. Integração, PID e carreira permanecem disponíveis como gestão contínua abaixo dos resultados."
 }
