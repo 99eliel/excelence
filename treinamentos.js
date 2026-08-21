@@ -6,565 +6,119 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-storage.js";
 
-const VERSION = '20260821-85';
+const VERSION = '20260821-86';
 const COMPANY_SESSION = 'excellence-training-company';
-const STEP_LABELS = { 1:'Treinamentos', 2:'Funcionários', 3:'Público', 4:'Realizações', 5:'Eficácia' };
-
-const state = {
-  user:null, perfil:null, empresas:[], empresaId:'', empresaNome:'',
-  viewStep:null, cache:null, cacheAt:0, observerStarted:false
+const STEP_LABELS = {1:'Treinamentos',2:'Funcionários',3:'Público',4:'Realizações',5:'Eficácia',6:'Resultados'};
+const REPORT_LABELS = {
+  geral:'Relatório geral', treinamento:'Por treinamento', funcionario:'Por funcionário',
+  matriz:'Matriz de competências', pendencias:'Pendências e atrasados', eficacia:'Eficácia',
+  evidencias:'Evidências', auditoria:'Dossiê de auditoria'
 };
 
-const esc = (v='') => String(v ?? '')
-  .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-  .replaceAll('"','&quot;').replaceAll("'",'&#039;');
-const norm = (v='') => String(v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-const text = el => String(el?.textContent || '').replace(/\s+/g,' ').trim();
+const state = {
+  user:null, perfil:null, empresas:[], empresaId:'', empresaNome:'', viewStep:null,
+  cache:null, cacheAt:0, observerStarted:false,
+  reportFilters:{type:'geral',from:'',to:'',trainingId:'',employeeId:'',sector:'',status:''}
+};
+
+const esc=(v='')=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+const norm=(v='')=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const text=el=>String(el?.textContent||'').replace(/\s+/g,' ').trim();
+const pct=(a,b)=>b?`${Math.round((a/b)*100)}%`:'0%';
 
 function toast(message,type='ok'){
   document.querySelector('[data-training-toast]')?.remove();
-  const el=document.createElement('div');
-  el.dataset.trainingToast='1';
-  el.textContent=message;
+  const el=document.createElement('div');el.dataset.trainingToast='1';el.textContent=message;
   el.style.cssText=`position:fixed;right:18px;bottom:18px;z-index:100000;padding:12px 15px;border-radius:14px;font-weight:850;color:#fff;max-width:420px;box-shadow:0 18px 42px rgba(5,36,55,.25);background:${type==='err'?'#9f2e2e':'#073F5A'}`;
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),3800);
+  document.body.appendChild(el);setTimeout(()=>el.remove(),3800);
 }
 
 function injectStyle(){
   if(document.getElementById('training-root-style')) return;
-  const s=document.createElement('style');
-  s.id='training-root-style';
+  const s=document.createElement('style');s.id='training-root-style';
   s.textContent=`
-    .tr-root{padding:24px;max-width:1500px;margin:0 auto;color:#173846}
-    .tr-hero{background:linear-gradient(135deg,#073F5A,#0b607f);color:#fff;border-radius:22px;padding:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;box-shadow:0 18px 42px rgba(7,63,90,.14)}
-    .tr-hero small{font-weight:900;letter-spacing:.06em}.tr-hero h1{font-size:32px;margin:5px 0 8px}.tr-hero p{margin:0;color:#dcecf2;max-width:820px}.tr-hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .tr-root{padding:24px;max-width:1500px;margin:0 auto;color:#173846}.tr-hero{background:linear-gradient(135deg,#073F5A,#0b607f);color:#fff;border-radius:22px;padding:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;box-shadow:0 18px 42px rgba(7,63,90,.14)}.tr-hero small{font-weight:900;letter-spacing:.06em}.tr-hero h1{font-size:32px;margin:5px 0 8px}.tr-hero p{margin:0;color:#dcecf2;max-width:820px}.tr-hero-actions{display:flex;gap:8px;flex-wrap:wrap}
     .tr-btn{border:0;border-radius:11px;padding:10px 13px;font-weight:850;cursor:pointer}.tr-btn.primary{background:#073F5A;color:#fff}.tr-btn.gold{background:#e9b64e;color:#173846}.tr-btn.soft{background:#eef5f7;color:#073F5A}.tr-btn.danger{background:#fde8e8;color:#992525}.tr-btn.ok{background:#e3f5e9;color:#1f6b37}.tr-btn:disabled{opacity:.45;cursor:not-allowed}
-    .tr-flow-head{margin:18px 0 12px;background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 9px 26px rgba(7,63,90,.05)}
-    .tr-current{display:flex;align-items:center;gap:12px}.tr-current-num{width:44px;height:44px;border-radius:14px;background:#073F5A;color:#fff;display:grid;place-items:center;font-size:20px;font-weight:900}.tr-current h2{margin:0;color:#073F5A;font-size:21px}.tr-current p{margin:3px 0 0;color:#607788;font-size:13px}
-    .tr-done-nav{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.tr-done-nav button{border:1px solid #cfe0e6;background:#f7fafb;color:#073F5A;border-radius:999px;padding:7px 10px;font-weight:800;cursor:pointer;font-size:12px}.tr-done-nav button.active{background:#073F5A;color:#fff;border-color:#073F5A}
-    .tr-section{background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:18px;box-shadow:0 10px 28px rgba(7,63,90,.05)}.tr-section+.tr-section{margin-top:14px}
-    .tr-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}.tr-section-head h2,.tr-section-head h3{margin:0;color:#073F5A}.tr-section-head p{margin:5px 0 0;color:#607788}
-    .tr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.tr-card{border:1px solid #dbe7eb;border-radius:15px;padding:14px;background:#fbfdfe}.tr-card h3{margin:0 0 5px;color:#123e50}.tr-card p{margin:0;color:#647c87}.tr-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
-    .tr-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:850;background:#eef5f7;color:#073F5A}.tr-badge.ok{background:#e3f5e9;color:#1f6b37}.tr-badge.warn{background:#fff4d6;color:#87630b}.tr-badge.bad{background:#fde8e8;color:#9b2222}
-    .tr-table-wrap{overflow:auto}.tr-table{width:100%;border-collapse:collapse;min-width:760px}.tr-table th,.tr-table td{padding:10px;border-bottom:1px solid #e5edef;text-align:left;vertical-align:top}.tr-table th{font-size:11px;text-transform:uppercase;color:#607788;background:#f7fafb}.tr-table tr:last-child td{border-bottom:0}
-    .tr-empty{padding:26px;text-align:center;border:1px dashed #cbdde4;border-radius:14px;color:#607788;background:#fbfdfe}.tr-empty strong{display:block;color:#073F5A;font-size:17px;margin-bottom:5px}
-    .tr-next{margin-top:16px;padding-top:16px;border-top:1px solid #e5edef;display:flex;align-items:center;justify-content:space-between;gap:12px}.tr-next div strong{display:block;color:#073F5A}.tr-next div small{color:#607788}
-    .tr-alert{border-radius:14px;padding:12px 14px;background:#fff8e4;border:1px solid #eedca8;color:#6b5313;margin-bottom:12px}.tr-alert.error{background:#fff0ee;border-color:#eac3bc;color:#8f2c22}.tr-alert.success{background:#eef9f1;border-color:#c9e6d0;color:#236b3a}
-    .tr-modal-bg{position:fixed;inset:0;background:rgba(3,26,38,.58);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px}.tr-modal{width:min(900px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
-    .tr-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.tr-modal-head h2{margin:0;color:#073F5A}.tr-modal-head p{margin:4px 0 0;color:#607788}
-    .tr-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tr-form .full{grid-column:1/-1}.tr-form label{display:block;font-size:13px;font-weight:800;color:#466572;margin-bottom:5px}.tr-form input,.tr-form select,.tr-form textarea{width:100%;border:1px solid #cfdfe5;border-radius:10px;padding:10px;background:#fff;color:#173846}.tr-form textarea{min-height:88px;resize:vertical}
-    .tr-person-result{display:grid;grid-template-columns:auto 1fr 150px;gap:10px;align-items:center;border:1px solid #dbe7eb;border-radius:12px;padding:10px}.tr-person-result select{width:100%;border:1px solid #cfdfe5;border-radius:9px;padding:8px}
-    .tr-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.tr-kpi{background:#fff;border:1px solid #d9e6eb;border-radius:16px;padding:15px}.tr-kpi small{display:block;color:#607788;text-transform:uppercase;font-weight:800}.tr-kpi strong{display:block;font-size:28px;color:#073F5A;margin-top:4px}
-    .tr-company-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.tr-company{border:1px solid #d9e6eb;border-radius:18px;padding:18px;background:#fff;cursor:pointer}.tr-company:hover{border-color:#0b6f93;transform:translateY(-1px)}
-    .tr-matrix-mini{display:grid;gap:8px}.tr-matrix-row{border:1px solid #e0eaee;border-radius:12px;padding:11px}.tr-matrix-row strong{color:#073F5A}.tr-matrix-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.tr-tag{font-size:11px;border-radius:999px;padding:5px 8px;background:#eef5f7;color:#345968;font-weight:800}
-    .tr-aux-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tr-aux{border:1px solid #d9e6eb;border-radius:16px;padding:15px;background:#fbfdfe}.tr-aux h3{margin:0 0 5px;color:#073F5A}.tr-aux p{margin:0 0 12px;color:#607788}
-
-    .tr-audience-tools{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:center;padding:14px;background:#f5f9fb;border:1px solid #dce8ed;border-radius:15px;margin-bottom:12px}
-    .tr-audience-search{position:relative}.tr-audience-search input{width:100%;height:44px;border:1px solid #c8dce4;border-radius:12px;padding:10px 42px 10px 14px;background:#fff;color:#173846;font-size:14px;outline:none}.tr-audience-search input:focus{border-color:#0b6f93;box-shadow:0 0 0 3px rgba(11,111,147,.10)}.tr-audience-search span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#6d8590;font-size:17px;pointer-events:none}
-    .tr-audience-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tr-audience-meta{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}
-    .tr-people-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:430px;overflow:auto;padding:2px 4px 2px 2px}.tr-people-list::-webkit-scrollbar{width:8px}.tr-people-list::-webkit-scrollbar-thumb{background:#c7d9e0;border-radius:999px}
-    .tr-person-card{display:grid;grid-template-columns:22px 44px minmax(0,1fr);gap:11px;align-items:center;border:1px solid #d9e6eb;border-radius:14px;padding:12px 13px;background:#fff;cursor:pointer;transition:.15s ease}.tr-person-card:hover{border-color:#8ab9c8;background:#f9fcfd}.tr-person-card.selected{border-color:#0b6f93;background:#eff8fb;box-shadow:0 0 0 2px rgba(11,111,147,.07)}.tr-person-card.hidden{display:none!important}
-    .tr-person-card input[type="checkbox"]{appearance:auto!important;-webkit-appearance:checkbox!important;width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;margin:0!important;padding:0!important;accent-color:#0b6f93;box-shadow:none!important}
-    .tr-person-avatar{width:42px;height:42px;border-radius:13px;background:#e7f2f6;color:#073F5A;display:grid;place-items:center;font-weight:900;font-size:15px}.tr-person-info{min-width:0}.tr-person-info strong{display:block;color:#143e4e;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tr-person-info small{display:block;color:#667f8a;font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .tr-audience-empty{grid-column:1/-1;padding:28px;text-align:center;border:1px dashed #cbdde4;border-radius:14px;color:#607788;background:#fbfdfe}.tr-audience-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #e4ecef;margin-top:14px;padding-top:14px}.tr-audience-footer small{display:block;color:#657d88;margin-top:3px}
-
-    @media(max-width:980px){.tr-grid,.tr-company-grid,.tr-summary,.tr-aux-grid{grid-template-columns:repeat(2,1fr)}.tr-flow-head{align-items:flex-start;flex-direction:column}.tr-done-nav{justify-content:flex-start}.tr-audience-tools{grid-template-columns:1fr}.tr-audience-actions{justify-content:flex-start}}
-    @media(max-width:680px){.tr-root{padding:12px}.tr-hero{flex-direction:column}.tr-grid,.tr-company-grid,.tr-summary,.tr-aux-grid,.tr-form,.tr-people-list{grid-template-columns:1fr}.tr-form .full{grid-column:auto}.tr-person-result{grid-template-columns:auto 1fr}.tr-person-result select{grid-column:2}.tr-next,.tr-audience-footer{align-items:flex-start;flex-direction:column}.tr-next .tr-btn,.tr-audience-footer .tr-btn{width:100%}}
-  `;
-  document.head.appendChild(s);
+    .tr-flow-head{margin:18px 0 12px;background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;box-shadow:0 9px 26px rgba(7,63,90,.05)}.tr-current{display:flex;align-items:center;gap:12px}.tr-current-num{width:44px;height:44px;border-radius:14px;background:#073F5A;color:#fff;display:grid;place-items:center;font-size:20px;font-weight:900}.tr-current h2{margin:0;color:#073F5A;font-size:21px}.tr-current p{margin:3px 0 0;color:#607788;font-size:13px}.tr-done-nav{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}.tr-done-nav button{border:1px solid #cfe0e6;background:#f7fafb;color:#073F5A;border-radius:999px;padding:7px 10px;font-weight:800;cursor:pointer;font-size:12px}.tr-done-nav button.active{background:#073F5A;color:#fff;border-color:#073F5A}
+    .tr-section{background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:18px;box-shadow:0 10px 28px rgba(7,63,90,.05)}.tr-section+.tr-section{margin-top:14px}.tr-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px}.tr-section-head h2,.tr-section-head h3{margin:0;color:#073F5A}.tr-section-head p{margin:5px 0 0;color:#607788}.tr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.tr-card{border:1px solid #dbe7eb;border-radius:15px;padding:14px;background:#fbfdfe}.tr-card h3{margin:0 0 5px;color:#123e50}.tr-card p{margin:0;color:#647c87}.tr-card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .tr-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:850;background:#eef5f7;color:#073F5A}.tr-badge.ok{background:#e3f5e9;color:#1f6b37}.tr-badge.warn{background:#fff4d6;color:#87630b}.tr-badge.bad{background:#fde8e8;color:#9b2222}.tr-table-wrap{overflow:auto}.tr-table{width:100%;border-collapse:collapse;min-width:760px}.tr-table th,.tr-table td{padding:10px;border-bottom:1px solid #e5edef;text-align:left;vertical-align:top}.tr-table th{font-size:11px;text-transform:uppercase;color:#607788;background:#f7fafb}.tr-table tr:last-child td{border-bottom:0}
+    .tr-empty{padding:26px;text-align:center;border:1px dashed #cbdde4;border-radius:14px;color:#607788;background:#fbfdfe}.tr-empty strong{display:block;color:#073F5A;font-size:17px;margin-bottom:5px}.tr-next{margin-top:16px;padding-top:16px;border-top:1px solid #e5edef;display:flex;align-items:center;justify-content:space-between;gap:12px}.tr-next div strong{display:block;color:#073F5A}.tr-next div small{color:#607788}.tr-alert{border-radius:14px;padding:12px 14px;background:#fff8e4;border:1px solid #eedca8;color:#6b5313;margin-bottom:12px}.tr-alert.error{background:#fff0ee;border-color:#eac3bc;color:#8f2c22}.tr-alert.success{background:#eef9f1;border-color:#c9e6d0;color:#236b3a}
+    .tr-modal-bg{position:fixed;inset:0;background:rgba(3,26,38,.58);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px}.tr-modal{width:min(900px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}.tr-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}.tr-modal-head h2{margin:0;color:#073F5A}.tr-modal-head p{margin:4px 0 0;color:#607788}.tr-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tr-form .full{grid-column:1/-1}.tr-form label{display:block;font-size:13px;font-weight:800;color:#466572;margin-bottom:5px}.tr-form input,.tr-form select,.tr-form textarea{width:100%;border:1px solid #cfdfe5;border-radius:10px;padding:10px;background:#fff;color:#173846}.tr-form textarea{min-height:88px;resize:vertical}
+    .tr-person-result{display:grid;grid-template-columns:auto 1fr 150px;gap:10px;align-items:center;border:1px solid #dbe7eb;border-radius:12px;padding:10px}.tr-person-result select{width:100%;border:1px solid #cfdfe5;border-radius:9px;padding:8px}.tr-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.tr-kpi{background:#fff;border:1px solid #d9e6eb;border-radius:16px;padding:15px}.tr-kpi small{display:block;color:#607788;text-transform:uppercase;font-weight:800}.tr-kpi strong{display:block;font-size:28px;color:#073F5A;margin-top:4px}.tr-company-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.tr-company{border:1px solid #d9e6eb;border-radius:18px;padding:18px;background:#fff;cursor:pointer}.tr-company:hover{border-color:#0b6f93;transform:translateY(-1px)}
+    .tr-matrix-mini{display:grid;gap:8px}.tr-matrix-row{border:1px solid #e0eaee;border-radius:12px;padding:11px}.tr-matrix-row strong{color:#073F5A}.tr-matrix-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.tr-tag{font-size:11px;border-radius:999px;padding:5px 8px;background:#eef5f7;color:#345968;font-weight:800}.tr-aux-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}.tr-aux{border:1px solid #d9e6eb;border-radius:16px;padding:15px;background:#fbfdfe}.tr-aux h3{margin:0 0 5px;color:#073F5A}.tr-aux p{margin:0 0 12px;color:#607788}
+    .tr-audience-tools{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:12px;align-items:center;padding:14px;background:#f5f9fb;border:1px solid #dce8ed;border-radius:15px;margin-bottom:12px}.tr-audience-search{position:relative}.tr-audience-search input{width:100%;height:44px;border:1px solid #c8dce4;border-radius:12px;padding:10px 42px 10px 14px;background:#fff;color:#173846;font-size:14px;outline:none}.tr-audience-search input:focus{border-color:#0b6f93;box-shadow:0 0 0 3px rgba(11,111,147,.10)}.tr-audience-search span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#6d8590;font-size:17px;pointer-events:none}.tr-audience-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.tr-audience-meta{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 12px}.tr-people-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:430px;overflow:auto;padding:2px 4px 2px 2px}.tr-person-card{display:grid;grid-template-columns:22px 44px minmax(0,1fr);gap:11px;align-items:center;border:1px solid #d9e6eb;border-radius:14px;padding:12px 13px;background:#fff;cursor:pointer;transition:.15s ease}.tr-person-card:hover{border-color:#8ab9c8;background:#f9fcfd}.tr-person-card.selected{border-color:#0b6f93;background:#eff8fb;box-shadow:0 0 0 2px rgba(11,111,147,.07)}.tr-person-card.hidden{display:none!important}.tr-person-card input[type="checkbox"]{appearance:auto!important;-webkit-appearance:checkbox!important;width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;margin:0!important;padding:0!important;accent-color:#0b6f93;box-shadow:none!important}.tr-person-avatar{width:42px;height:42px;border-radius:13px;background:#e7f2f6;color:#073F5A;display:grid;place-items:center;font-weight:900;font-size:15px}.tr-person-info{min-width:0}.tr-person-info strong{display:block;color:#143e4e;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tr-person-info small{display:block;color:#667f8a;font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tr-audience-empty{grid-column:1/-1;padding:28px;text-align:center;border:1px dashed #cbdde4;border-radius:14px;color:#607788;background:#fbfdfe}.tr-audience-footer{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid #e4ecef;margin-top:14px;padding-top:14px}.tr-audience-footer small{display:block;color:#657d88;margin-top:3px}
+    .tr-report-shell{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px}.tr-report-menu{background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:12px;height:max-content;position:sticky;top:12px}.tr-report-menu button{width:100%;text-align:left;border:0;background:transparent;color:#315563;padding:10px 11px;border-radius:10px;font-weight:800;cursor:pointer;margin:2px 0}.tr-report-menu button.active{background:#073F5A;color:#fff}.tr-report-main{min-width:0}.tr-report-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:#f6f9fa;border:1px solid #dce8ed;border-radius:15px;padding:13px;margin-bottom:12px}.tr-report-filters label{font-size:11px;text-transform:uppercase;font-weight:850;color:#5d7681}.tr-report-filters input,.tr-report-filters select{display:block;width:100%;margin-top:5px;border:1px solid #cfdfe5;border-radius:9px;padding:9px;background:#fff;color:#173846}.tr-report-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-bottom:12px}.tr-report-preview{background:#fff;border:1px solid #d9e6eb;border-radius:18px;padding:18px}.tr-report-title{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:2px solid #073F5A;padding-bottom:10px;margin-bottom:12px}.tr-report-title h2{margin:0;color:#073F5A}.tr-report-title p{margin:4px 0 0;color:#607788}.tr-report-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}.tr-report-kpi{border:1px solid #dce8ed;border-radius:12px;padding:10px;background:#fbfdfe}.tr-report-kpi small{display:block;color:#627b86;font-size:10px;text-transform:uppercase;font-weight:850}.tr-report-kpi strong{display:block;color:#073F5A;font-size:21px;margin-top:3px}.tr-report-block{margin-top:14px}.tr-report-block h3{margin:0 0 8px;color:#073F5A}.tr-report-note{font-size:12px;color:#657d88}.tr-evidence-list{display:grid;gap:8px}.tr-evidence{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid #dce8ed;border-radius:12px;padding:10px}.tr-evidence strong{display:block;color:#073F5A}.tr-evidence small{color:#657d88}.tr-audit-cover{border:2px solid #073F5A;border-radius:16px;padding:18px;background:#f9fcfd;margin-bottom:14px}.tr-audit-cover h2{margin:0;color:#073F5A}.tr-audit-cover p{margin:5px 0 0;color:#607788}
+    @media(max-width:1100px){.tr-report-shell{grid-template-columns:1fr}.tr-report-menu{position:static;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.tr-report-menu button{margin:0}.tr-report-kpis{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:980px){.tr-grid,.tr-company-grid,.tr-summary,.tr-aux-grid{grid-template-columns:repeat(2,1fr)}.tr-flow-head{align-items:flex-start;flex-direction:column}.tr-done-nav{justify-content:flex-start}.tr-audience-tools{grid-template-columns:1fr}.tr-audience-actions{justify-content:flex-start}.tr-report-filters{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:680px){.tr-root{padding:12px}.tr-hero{flex-direction:column}.tr-grid,.tr-company-grid,.tr-summary,.tr-aux-grid,.tr-form,.tr-people-list,.tr-report-filters,.tr-report-kpis{grid-template-columns:1fr}.tr-form .full{grid-column:auto}.tr-person-result{grid-template-columns:auto 1fr}.tr-person-result select{grid-column:2}.tr-next,.tr-audience-footer{align-items:flex-start;flex-direction:column}.tr-next .tr-btn,.tr-audience-footer .tr-btn{width:100%}.tr-report-menu{grid-template-columns:repeat(2,1fr)}}
+  `;document.head.appendChild(s);
 }
 
-function canAccess(){
-  if(!state.perfil) return false;
-  if(state.perfil.tipo==='admin') return true;
-  if(!Array.isArray(state.perfil.permissoes)) return true;
-  return state.perfil.permissoes.includes('treinamentos');
-}
-
-async function loadProfile(user){
-  state.user=user||null;
-  state.perfil=null;
-  if(!user) return;
-  const snap=await getDoc(doc(db,'usuarios',user.uid));
-  state.perfil=snap.exists()?{id:snap.id,...snap.data()}:null;
-}
-
-async function loadCompanies(){
-  if(state.perfil?.tipo==='admin'){
-    const s=await getDocs(collection(db,'empresas'));
-    state.empresas=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
-  }else{
-    const id=state.perfil?.empresaId||'';
-    if(!id){state.empresas=[];return;}
-    const s=await getDoc(doc(db,'empresas',id));
-    state.empresas=s.exists()?[{id:s.id,...s.data()}]:[];
-  }
-}
-
+function canAccess(){if(!state.perfil)return false;if(state.perfil.tipo==='admin')return true;if(!Array.isArray(state.perfil.permissoes))return true;return state.perfil.permissoes.includes('treinamentos')}
+async function loadProfile(user){state.user=user||null;state.perfil=null;if(!user)return;const snap=await getDoc(doc(db,'usuarios',user.uid));state.perfil=snap.exists()?{id:snap.id,...snap.data()}:null}
+async function loadCompanies(){if(state.perfil?.tipo==='admin'){const s=await getDocs(collection(db,'empresas'));state.empresas=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'))}else{const id=state.perfil?.empresaId||'';if(!id){state.empresas=[];return}const s=await getDoc(doc(db,'empresas',id));state.empresas=s.exists()?[{id:s.id,...s.data()}]:[]}}
 function mainEl(){return document.querySelector('.main')}
 function clearCache(){state.cache=null;state.cacheAt=0}
-
-function ensureMenu(){
-  if(!state.perfil||!canAccess()) return;
-  const nav=document.querySelector('#sidebar .nav-group,.sidebar .nav-group,#sidebar nav,.sidebar nav');
-  if(!nav) return;
-  let btn=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('treinamento'));
-  if(!btn){
-    btn=document.createElement('button');
-    btn.type='button';
-    btn.className='nav-btn';
-    btn.innerHTML='<span>▤</span>Treinamentos';
-    const apont=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('apontamento'));
-    const quem=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('quem somos'));
-    if(apont?.parentElement===nav) apont.insertAdjacentElement('afterend',btn);
-    else if(quem?.parentElement===nav) nav.insertBefore(btn,quem);
-    else nav.appendChild(btn);
-  }
-  btn.style.display='';
-  if(btn.dataset.trainingRootBound==='1') return;
-  btn.dataset.trainingRootBound='1';
-  btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openTraining()},true);
-}
-
-function rememberCompany(id,name=''){
-  state.empresaId=id||'';
-  state.empresaNome=name||'';
-  try{if(id)sessionStorage.setItem(COMPANY_SESSION,id);else sessionStorage.removeItem(COMPANY_SESSION)}catch(_){ }
-}
-
-async function qCompany(name){
-  const s=await getDocs(query(collection(db,name),where('empresaId','==',state.empresaId)));
-  return s.docs.map(d=>({id:d.id,...d.data()}));
-}
-
-async function loadData(force=false){
-  if(!state.empresaId) return null;
-  if(!force&&state.cache&&Date.now()-state.cacheAt<8000) return state.cache;
-  const [plans,cols,matrix,events,pids]=await Promise.all([
-    qCompany('empresa_treinamentos'),qCompany('empresa_colaboradores'),qCompany('empresa_matriz_competencias'),qCompany('empresa_treinamento_eventos'),qCompany('empresa_pids')
-  ]);
-  plans.sort((a,b)=>String(a.dataPrevista||'').localeCompare(String(b.dataPrevista||'')));
-  cols.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
-  events.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));
-  state.cache={plans,cols,matrix,events,pids};
-  state.cacheAt=Date.now();
-  return state.cache;
-}
-
+function ensureMenu(){if(!state.perfil||!canAccess())return;const nav=document.querySelector('#sidebar .nav-group,.sidebar .nav-group,#sidebar nav,.sidebar nav');if(!nav)return;let btn=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('treinamento'));if(!btn){btn=document.createElement('button');btn.type='button';btn.className='nav-btn';btn.innerHTML='<span>▤</span>Treinamentos';const apont=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('apontamento'));const quem=[...nav.querySelectorAll('.nav-btn')].find(b=>norm(text(b)).includes('quem somos'));if(apont?.parentElement===nav)apont.insertAdjacentElement('afterend',btn);else if(quem?.parentElement===nav)nav.insertBefore(btn,quem);else nav.appendChild(btn)}btn.style.display='';if(btn.dataset.trainingRootBound==='1')return;btn.dataset.trainingRootBound='1';btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openTraining()},true)}
+function rememberCompany(id,name=''){state.empresaId=id||'';state.empresaNome=name||'';try{if(id)sessionStorage.setItem(COMPANY_SESSION,id);else sessionStorage.removeItem(COMPANY_SESSION)}catch(_){}}
+async function qCompany(name){const s=await getDocs(query(collection(db,name),where('empresaId','==',state.empresaId)));return s.docs.map(d=>({id:d.id,...d.data()}))}
+async function loadData(force=false){if(!state.empresaId)return null;if(!force&&state.cache&&Date.now()-state.cacheAt<8000)return state.cache;const [plans,cols,matrix,events,pids,integrations,careers]=await Promise.all([qCompany('empresa_treinamentos'),qCompany('empresa_colaboradores'),qCompany('empresa_matriz_competencias'),qCompany('empresa_treinamento_eventos'),qCompany('empresa_pids'),qCompany('empresa_integracoes'),qCompany('empresa_carreiras')]);plans.sort((a,b)=>String(a.dataPrevista||'').localeCompare(String(b.dataPrevista||'')));cols.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));events.sort((a,b)=>String(b.data||'').localeCompare(String(a.data||'')));state.cache={plans,cols,matrix,events,pids,integrations,careers};state.cacheAt=Date.now();return state.cache}
 function applicableRows(d){return d.matrix.filter(m=>m.aplicavel!==false&&norm(m.status)!=='nao aplicavel')}
-function requiredStep(d){
-  if(!d.plans.length) return 1;
-  if(!d.cols.length) return 2;
-  const applicable=applicableRows(d);
-  const allAudience=d.plans.every(p=>p.publicoDefinido===true)&&applicable.length>0;
-  if(!allAudience) return 3;
-  if(applicable.some(m=>norm(m.status)!=='concluido')) return 4;
-  if(applicable.some(m=>norm(m.eficaciaStatus)!=='eficaz')) return 5;
-  return 6;
-}
+function requiredStep(d){if(!d.plans.length)return 1;if(!d.cols.length)return 2;const applicable=applicableRows(d);if(!(d.plans.every(p=>p.publicoDefinido===true)&&applicable.length>0))return 3;if(applicable.some(m=>norm(m.status)!=='concluido'))return 4;if(applicable.some(m=>norm(m.eficaciaStatus)!=='eficaz'))return 5;return 6}
+function badge(status=''){const n=norm(status);const cls=['concluido','eficaz','aprovado','ativo'].includes(n)?'ok':['reprovado','ineficaz','atrasado'].includes(n)?'bad':'warn';return `<span class="tr-badge ${cls}">${esc(status||'Pendente')}</span>`}
+function dateBr(v){if(!v)return '-';if(v?.toDate)return v.toDate().toLocaleDateString('pt-BR');const d=new Date(String(v).length===10?`${v}T12:00:00`:v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('pt-BR')}
+function initials(name=''){const p=String(name).trim().split(/\s+/).filter(Boolean);return((p[0]?.[0]||'')+(p.length>1?(p.at(-1)?.[0]||''):'')).toUpperCase()||'•'}
+function modal(title,subtitle,body){document.querySelector('.tr-modal-bg')?.remove();const bg=document.createElement('div');bg.className='tr-modal-bg';bg.innerHTML=`<div class="tr-modal"><div class="tr-modal-head"><div><h2>${esc(title)}</h2>${subtitle?`<p>${esc(subtitle)}</p>`:''}</div><button class="tr-btn soft" type="button" data-close>Fechar</button></div>${body}</div>`;document.body.appendChild(bg);bg.addEventListener('click',e=>{if(e.target===bg||e.target.closest('[data-close]'))bg.remove()});return bg}
 
-function badge(status=''){
-  const n=norm(status);
-  const cls=['concluido','eficaz','aprovado','ativo'].includes(n)?'ok':['reprovado','ineficaz','atrasado'].includes(n)?'bad':'warn';
-  return `<span class="tr-badge ${cls}">${esc(status||'Pendente')}</span>`;
-}
-function dateBr(v){
-  if(!v) return '-';
-  if(v?.toDate) return v.toDate().toLocaleDateString('pt-BR');
-  const d=new Date(String(v).length===10?`${v}T12:00:00`:v);
-  return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('pt-BR');
-}
-function initials(name=''){
-  const parts=String(name).trim().split(/\s+/).filter(Boolean);
-  return ((parts[0]?.[0]||'')+(parts.length>1?(parts.at(-1)?.[0]||''):'')).toUpperCase()||'•';
-}
-
-function modal(title,subtitle,body){
-  document.querySelector('.tr-modal-bg')?.remove();
-  const bg=document.createElement('div');
-  bg.className='tr-modal-bg';
-  bg.innerHTML=`<div class="tr-modal"><div class="tr-modal-head"><div><h2>${esc(title)}</h2>${subtitle?`<p>${esc(subtitle)}</p>`:''}</div><button class="tr-btn soft" type="button" data-close>Fechar</button></div>${body}</div>`;
-  document.body.appendChild(bg);
-  bg.addEventListener('click',e=>{if(e.target===bg||e.target.closest('[data-close]'))bg.remove()});
-  return bg;
-}
-
-async function openTraining(){
-  if(!canAccess()) return toast('Seu usuário não tem permissão para Treinamentos.','err');
-  injectStyle();
-  if(!state.empresas.length) await loadCompanies();
-  if(state.perfil?.tipo!=='admin'){
-    const e=state.empresas[0];
-    if(!e) return toast('Nenhuma empresa vinculada ao usuário.','err');
-    rememberCompany(e.id,e.nome||'Empresa');
-    state.viewStep=null;
-    clearCache();
-    return renderFlow(true);
-  }
-  if(!state.empresaId){
-    try{
-      const stored=sessionStorage.getItem(COMPANY_SESSION)||'';
-      const found=state.empresas.find(e=>e.id===stored);
-      if(found) rememberCompany(found.id,found.nome||'Empresa');
-    }catch(_){ }
-  }
-  if(!state.empresaId) return renderCompanySelect();
-  return renderFlow(true);
-}
-
-function renderCompanySelect(){
-  const main=mainEl();
-  if(!main) return;
-  main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO DE PESSOAS</small><h1>Treinamentos</h1><p>Escolha a empresa. Depois o sistema conduz o processo em ordem, mostrando somente o passo que já pode ser executado.</p></div></div><div class="tr-company-grid">${state.empresas.map(e=>`<article class="tr-company" data-company="${esc(e.id)}"><span class="tr-badge">Abrir</span><h3>${esc(e.nome||'Empresa')}</h3><p>${esc(e.cnpj||e.documento||'')}</p></article>`).join('')||'<div class="tr-empty">Nenhuma empresa cadastrada.</div>'}</div></section>`;
-  main.querySelectorAll('[data-company]').forEach(card=>card.addEventListener('click',()=>{
-    const e=state.empresas.find(x=>x.id===card.dataset.company);
-    if(!e) return;
-    rememberCompany(e.id,e.nome||'Empresa');
-    state.viewStep=null;
-    clearCache();
-    renderFlow(true);
-  }));
-}
-
-function stepIntro(step){
-  const map={
-    1:['Cadastre os treinamentos','Comece pelo que a empresa precisa ensinar. Nenhuma outra etapa aparece antes disso.'],
-    2:['Cadastre os funcionários','Agora informe quem trabalha na empresa. Você pode importar diretamente do Apontamento.'],
-    3:['Defina quem precisa de cada treinamento','Escolha as pessoas de cada treinamento. O sistema monta a matriz automaticamente, sem você precisar configurá-la manualmente.'],
-    4:['Registre os treinamentos realizados','Somente agora aparecem as realizações. Registre quem participou e o resultado de cada pessoa.'],
-    5:['Avalie a eficácia','Depois que todas as pendências de realização forem concluídas, valide se o treinamento realmente funcionou.'],
-    6:['Fluxo principal concluído','Treinamentos, pessoas, público, realizações e eficácia estão em dia.']
-  };
-  return map[step]||map[1];
-}
-
-async function renderFlow(force=false){
-  const main=mainEl();
-  if(!main) return;
-  const d=await loadData(force);
-  if(!d) return;
-  const current=requiredStep(d);
-  if(state.viewStep==null||state.viewStep>current) state.viewStep=current;
-  const view=state.viewStep;
-  const intro=stepIntro(view);
-  const done=[];
-  for(let i=1;i<=Math.min(current,5);i++) done.push(`<button type="button" data-step="${i}" class="${i===view?'active':''}">${i}. ${esc(STEP_LABELS[i])}</button>`);
-  main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO DE TREINAMENTOS</small><h1>${esc(state.empresaNome)}</h1><p>Fluxo sequencial: você vê somente a etapa atual e o que já concluiu. Etapas futuras permanecem ocultas até serem liberadas.</p></div><div class="tr-hero-actions">${state.perfil?.tipo==='admin'?'<button class="tr-btn soft" type="button" data-change-company>Trocar empresa</button>':''}</div></div><div class="tr-flow-head"><div class="tr-current"><div class="tr-current-num">${view===6?'✓':view}</div><div><h2>${esc(intro[0])}</h2><p>${esc(intro[1])}</p></div></div><div class="tr-done-nav">${done.join('')}</div></div><div data-step-content></div></section>`;
-  main.querySelector('[data-change-company]')?.addEventListener('click',()=>{rememberCompany('','');state.viewStep=null;clearCache();renderCompanySelect()});
-  main.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{const n=Number(b.dataset.step);if(n<=current){state.viewStep=n;renderFlow()}}));
-  if(view===1) return renderStep1(d);
-  if(view===2) return renderStep2(d);
-  if(view===3) return renderStep3(d);
-  if(view===4) return renderStep4(d);
-  if(view===5) return renderStep5(d);
-  return renderComplete(d);
-}
-
+async function openTraining(){if(!canAccess())return toast('Seu usuário não tem permissão para Treinamentos.','err');injectStyle();if(!state.empresas.length)await loadCompanies();if(state.perfil?.tipo!=='admin'){const e=state.empresas[0];if(!e)return toast('Nenhuma empresa vinculada ao usuário.','err');rememberCompany(e.id,e.nome||'Empresa');state.viewStep=null;clearCache();return renderFlow(true)}if(!state.empresaId){try{const stored=sessionStorage.getItem(COMPANY_SESSION)||'';const found=state.empresas.find(e=>e.id===stored);if(found)rememberCompany(found.id,found.nome||'Empresa')}catch(_){}}if(!state.empresaId)return renderCompanySelect();return renderFlow(true)}
+function renderCompanySelect(){const main=mainEl();if(!main)return;main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO DE PESSOAS</small><h1>Treinamentos</h1><p>Escolha a empresa. Depois o sistema conduz o processo em ordem, mostrando somente o passo que já pode ser executado.</p></div></div><div class="tr-company-grid">${state.empresas.map(e=>`<article class="tr-company" data-company="${esc(e.id)}"><span class="tr-badge">Abrir</span><h3>${esc(e.nome||'Empresa')}</h3><p>${esc(e.cnpj||e.documento||'')}</p></article>`).join('')||'<div class="tr-empty">Nenhuma empresa cadastrada.</div>'}</div></section>`;main.querySelectorAll('[data-company]').forEach(card=>card.addEventListener('click',()=>{const e=state.empresas.find(x=>x.id===card.dataset.company);if(!e)return;rememberCompany(e.id,e.nome||'Empresa');state.viewStep=null;clearCache();renderFlow(true)}))}
+function stepIntro(step){return({1:['Cadastre os treinamentos','Comece pelo que a empresa precisa ensinar. Nenhuma outra etapa aparece antes disso.'],2:['Cadastre os funcionários','Agora informe quem trabalha na empresa. Você pode importar diretamente do Apontamento.'],3:['Defina quem precisa de cada treinamento','Escolha as pessoas de cada treinamento. O sistema monta a matriz automaticamente.'],4:['Registre os treinamentos realizados','Registre quem participou e o resultado de cada pessoa.'],5:['Avalie a eficácia','Valide se o treinamento realmente funcionou.'],6:['Resultados e evidências','O fluxo operacional terminou. Agora consolide, demonstre e imprima os resultados.']}[step]||['Treinamentos',''])}
+async function renderFlow(force=false){const main=mainEl();if(!main)return;const d=await loadData(force);if(!d)return;const current=requiredStep(d);if(state.viewStep==null||state.viewStep>current)state.viewStep=current;const view=state.viewStep;const intro=stepIntro(view);const done=[];for(let i=1;i<=Math.min(current,6);i++)done.push(`<button type="button" data-step="${i}" class="${i===view?'active':''}">${i}. ${esc(STEP_LABELS[i])}</button>`);main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO DE TREINAMENTOS</small><h1>${esc(state.empresaNome)}</h1><p>Fluxo sequencial: somente etapas liberadas aparecem. Resultados, evidências e auditoria ficam disponíveis ao concluir a eficácia.</p></div><div class="tr-hero-actions">${state.perfil?.tipo==='admin'?'<button class="tr-btn soft" type="button" data-change-company>Trocar empresa</button>':''}</div></div><div class="tr-flow-head"><div class="tr-current"><div class="tr-current-num">${view}</div><div><h2>${esc(intro[0])}</h2><p>${esc(intro[1])}</p></div></div><div class="tr-done-nav">${done.join('')}</div></div><div data-step-content></div></section>`;main.querySelector('[data-change-company]')?.addEventListener('click',()=>{rememberCompany('','');state.viewStep=null;clearCache();renderCompanySelect()});main.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{const n=Number(b.dataset.step);if(n<=current){state.viewStep=n;renderFlow()}}));if(view===1)return renderStep1(d);if(view===2)return renderStep2(d);if(view===3)return renderStep3(d);if(view===4)return renderStep4(d);if(view===5)return renderStep5(d);return renderResults(d)}
 function contentEl(){return document.querySelector('[data-step-content]')}
 function continueBlock(title,sub,nextStep,label){return `<div class="tr-next"><div><strong>${esc(title)}</strong><small>${esc(sub)}</small></div><button class="tr-btn primary" type="button" data-continue="${nextStep}">${esc(label)}</button></div>`}
 function bindContinue(){document.querySelector('[data-continue]')?.addEventListener('click',e=>{state.viewStep=Number(e.currentTarget.dataset.continue);renderFlow()})}
 
-function renderStep1(d){
-  const root=contentEl();
-  root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>1. Treinamentos</h2><p>Cadastre primeiro todos os treinamentos que deseja controlar.</p></div><button class="tr-btn gold" type="button" data-new-training>Novo treinamento</button></div>${d.plans.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Previsão</th><th>Instrutor</th><th>Carga</th><th>Status</th><th></th></tr></thead><tbody>${d.plans.map(p=>`<tr><td><strong>${esc(p.titulo||p.nome||'Treinamento')}</strong><br><small>${esc(p.objetivo||'')}</small></td><td>${dateBr(p.dataPrevista)}</td><td>${esc(p.instrutor||'-')}</td><td>${esc(p.cargaHoraria||'-')}</td><td>${badge(p.status||'Planejado')}</td><td><button class="tr-btn soft" data-edit-training="${p.id}">Editar</button> <button class="tr-btn danger" data-delete-training="${p.id}">Excluir</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="tr-empty"><strong>Nenhum treinamento cadastrado</strong>Comece criando o primeiro treinamento. A etapa de funcionários só será liberada depois.</div>`}${d.plans.length?continueBlock('Treinamentos cadastrados','Agora você já pode informar os funcionários da empresa.',2,'Continuar para funcionários'):''}</section>`;
-  root.querySelector('[data-new-training]')?.addEventListener('click',()=>showTrainingForm());
-  root.querySelectorAll('[data-edit-training]').forEach(b=>b.addEventListener('click',()=>showTrainingForm(d.plans.find(p=>p.id===b.dataset.editTraining))));
-  root.querySelectorAll('[data-delete-training]').forEach(b=>b.addEventListener('click',()=>deleteTraining(b.dataset.deleteTraining,d)));
-  bindContinue();
-}
+function renderStep1(d){const root=contentEl();root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>1. Treinamentos</h2><p>Cadastre primeiro todos os treinamentos que deseja controlar.</p></div><button class="tr-btn gold" type="button" data-new-training>Novo treinamento</button></div>${d.plans.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Previsão</th><th>Instrutor</th><th>Carga</th><th>Status</th><th></th></tr></thead><tbody>${d.plans.map(p=>`<tr><td><strong>${esc(p.titulo||p.nome||'Treinamento')}</strong><br><small>${esc(p.objetivo||'')}</small></td><td>${dateBr(p.dataPrevista)}</td><td>${esc(p.instrutor||'-')}</td><td>${esc(p.cargaHoraria||'-')}</td><td>${badge(p.status||'Planejado')}</td><td><button class="tr-btn soft" data-edit-training="${p.id}">Editar</button> <button class="tr-btn danger" data-delete-training="${p.id}">Excluir</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="tr-empty"><strong>Nenhum treinamento cadastrado</strong>Comece criando o primeiro treinamento. A etapa de funcionários só será liberada depois.</div>`}${d.plans.length?continueBlock('Treinamentos cadastrados','Agora você já pode informar os funcionários da empresa.',2,'Continuar para funcionários'):''}</section>`;root.querySelector('[data-new-training]')?.addEventListener('click',()=>showTrainingForm());root.querySelectorAll('[data-edit-training]').forEach(b=>b.addEventListener('click',()=>showTrainingForm(d.plans.find(p=>p.id===b.dataset.editTraining))));root.querySelectorAll('[data-delete-training]').forEach(b=>b.addEventListener('click',()=>deleteTraining(b.dataset.deleteTraining,d)));bindContinue()}
+function showTrainingForm(item=null){const bg=modal(item?'Editar treinamento':'Novo treinamento',item?'Atualize os dados do treinamento.':'Cadastre o que será ensinado antes de avançar.',`<form class="tr-form" data-training-form><div><label>Título *</label><input name="titulo" required value="${esc(item?.titulo||'')}"></div><div><label>Data prevista</label><input type="date" name="dataPrevista" value="${esc(item?.dataPrevista||'')}"></div><div><label>Instrutor</label><input name="instrutor" value="${esc(item?.instrutor||'')}"></div><div><label>Carga horária</label><input name="cargaHoraria" placeholder="Ex.: 2h" value="${esc(item?.cargaHoraria||'')}"></div><div><label>Periodicidade</label><input name="periodicidade" value="${esc(item?.periodicidade||'')}"></div><div><label>Público planejado</label><input name="publicoAlvo" value="${esc(item?.publicoAlvo||'')}"></div><div class="full"><label>Objetivo</label><textarea name="objetivo">${esc(item?.objetivo||'')}</textarea></div><div class="full"><label>Evidência esperada</label><input name="evidenciaEsperada" value="${esc(item?.evidenciaEsperada||'')}"></div><div class="full"><button class="tr-btn primary" type="submit">${item?'Salvar alterações':'Salvar treinamento'}</button></div></form>`);bg.querySelector('[data-training-form]').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const data={empresaId:state.empresaId,titulo:f.get('titulo'),dataPrevista:f.get('dataPrevista')||'',instrutor:f.get('instrutor')||'',cargaHoraria:f.get('cargaHoraria')||'',periodicidade:f.get('periodicidade')||'',publicoAlvo:f.get('publicoAlvo')||'',objetivo:f.get('objetivo')||'',evidenciaEsperada:f.get('evidenciaEsperada')||'',atualizadoEm:serverTimestamp()};if(item)await updateDoc(doc(db,'empresa_treinamentos',item.id),data);else await addDoc(collection(db,'empresa_treinamentos'),{...data,status:'Planejado',publicoDefinido:false,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});bg.remove();clearCache();toast(item?'Treinamento atualizado.':'Treinamento criado.');state.viewStep=1;renderFlow(true)})}
+async function deleteTraining(id,d){if(d.events.some(e=>e.treinamentoId===id))return toast('Este treinamento já possui realizações e não pode ser excluído.','err');if(!confirm('Excluir este treinamento?'))return;await deleteDoc(doc(db,'empresa_treinamentos',id));for(const m of d.matrix.filter(x=>x.treinamentoId===id))await deleteDoc(doc(db,'empresa_matriz_competencias',m.id));clearCache();toast('Treinamento excluído.');renderFlow(true)}
+async function invalidateAudiences(){const d=await loadData();for(const p of d.plans)await updateDoc(doc(db,'empresa_treinamentos',p.id),{publicoDefinido:false,publicoRevisaoNecessaria:true,atualizadoEm:serverTimestamp()})}
 
-function showTrainingForm(item=null){
-  const bg=modal(item?'Editar treinamento':'Novo treinamento',item?'Atualize os dados do treinamento.':'Cadastre o que será ensinado antes de avançar para os funcionários.',`<form class="tr-form" data-training-form><div><label>Título *</label><input name="titulo" required value="${esc(item?.titulo||'')}"></div><div><label>Data prevista</label><input type="date" name="dataPrevista" value="${esc(item?.dataPrevista||'')}"></div><div><label>Instrutor</label><input name="instrutor" value="${esc(item?.instrutor||'')}"></div><div><label>Carga horária</label><input name="cargaHoraria" placeholder="Ex.: 2h" value="${esc(item?.cargaHoraria||'')}"></div><div><label>Periodicidade</label><input name="periodicidade" placeholder="Anual, admissão..." value="${esc(item?.periodicidade||'')}"></div><div><label>Público planejado (descrição)</label><input name="publicoAlvo" placeholder="Ex.: líderes, costureiras..." value="${esc(item?.publicoAlvo||'')}"></div><div class="full"><label>Objetivo</label><textarea name="objetivo">${esc(item?.objetivo||'')}</textarea></div><div class="full"><label>Evidência esperada</label><input name="evidenciaEsperada" placeholder="Lista de presença, prova, certificado..." value="${esc(item?.evidenciaEsperada||'')}"></div><div class="full"><button class="tr-btn primary" type="submit">${item?'Salvar alterações':'Salvar treinamento'}</button></div></form>`);
-  bg.querySelector('[data-training-form]').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const f=new FormData(e.currentTarget);
-    const data={empresaId:state.empresaId,titulo:f.get('titulo'),dataPrevista:f.get('dataPrevista')||'',instrutor:f.get('instrutor')||'',cargaHoraria:f.get('cargaHoraria')||'',periodicidade:f.get('periodicidade')||'',publicoAlvo:f.get('publicoAlvo')||'',objetivo:f.get('objetivo')||'',evidenciaEsperada:f.get('evidenciaEsperada')||'',atualizadoEm:serverTimestamp()};
-    if(item) await updateDoc(doc(db,'empresa_treinamentos',item.id),data);
-    else await addDoc(collection(db,'empresa_treinamentos'),{...data,status:'Planejado',publicoDefinido:false,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});
-    bg.remove();clearCache();toast(item?'Treinamento atualizado.':'Treinamento criado.');state.viewStep=1;renderFlow(true);
-  });
-}
+function renderStep2(d){const root=contentEl();root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>2. Funcionários</h2><p>Cadastre as pessoas da empresa. Se elas já existem no Apontamento, importe.</p></div><div><button class="tr-btn soft" type="button" data-import>Importar do Apontamento</button> <button class="tr-btn gold" type="button" data-new-employee>Novo funcionário</button></div></div>${d.cols.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Nome</th><th>Função</th><th>Setor</th><th>Admissão</th><th>Status</th><th></th></tr></thead><tbody>${d.cols.map(c=>`<tr><td><strong>${esc(c.nome||'')}</strong></td><td>${esc(c.funcao||'-')}</td><td>${esc(c.setor||'-')}</td><td>${dateBr(c.admissao)}</td><td>${badge(c.ativo===false?'Inativo':'Ativo')}</td><td><button class="tr-btn danger" data-delete-employee="${c.id}">Excluir</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="tr-empty"><strong>Nenhum funcionário cadastrado</strong>Importe do Apontamento ou cadastre manualmente.</div>`}${d.cols.length?continueBlock('Funcionários cadastrados','Agora o sistema pode relacionar pessoas aos treinamentos.',3,'Continuar para definir público'):''}</section>`;root.querySelector('[data-import]')?.addEventListener('click',importEmployees);root.querySelector('[data-new-employee]')?.addEventListener('click',showEmployeeForm);root.querySelectorAll('[data-delete-employee]').forEach(b=>b.addEventListener('click',()=>deleteEmployee(b.dataset.deleteEmployee,d)));bindContinue()}
+function showEmployeeForm(){const bg=modal('Novo funcionário','Cadastre as informações essenciais.',`<form class="tr-form" data-employee-form><div><label>Nome *</label><input name="nome" required></div><div><label>Função</label><input name="funcao"></div><div><label>Setor</label><input name="setor"></div><div><label>Data de admissão</label><input type="date" name="admissao"></div><div class="full"><button class="tr-btn primary" type="submit">Salvar funcionário</button></div></form>`);bg.querySelector('[data-employee-form]').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget);await addDoc(collection(db,'empresa_colaboradores'),{empresaId:state.empresaId,nome:f.get('nome'),funcao:f.get('funcao')||'',setor:f.get('setor')||'',admissao:f.get('admissao')||'',ativo:true,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});await invalidateAudiences();bg.remove();clearCache();toast('Funcionário cadastrado.');state.viewStep=2;renderFlow(true)})}
+async function importEmployees(){const prod=await qCompany('empresa_funcionarios');const d=await loadData();const names=new Set(d.cols.map(x=>norm(x.nome)));let count=0;for(const f of prod){const nome=String(f.nome||'').trim();if(!nome||names.has(norm(nome)))continue;await addDoc(collection(db,'empresa_colaboradores'),{empresaId:state.empresaId,nome,funcao:f.funcao||'',setor:f.equipeNome||f.setor||'',ativo:f.ativo!==false,origemApontamentoId:f.id,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});names.add(norm(nome));count++}if(count)await invalidateAudiences();clearCache();toast(count?`${count} funcionário(s) importado(s).`:'Nenhum funcionário novo para importar.');state.viewStep=2;renderFlow(true)}
+async function deleteEmployee(id,d){if(!confirm('Excluir este funcionário da área de treinamentos?'))return;await deleteDoc(doc(db,'empresa_colaboradores',id));for(const m of d.matrix.filter(x=>x.colaboradorId===id))await deleteDoc(doc(db,'empresa_matriz_competencias',m.id));await invalidateAudiences();clearCache();toast('Funcionário excluído.');state.viewStep=2;renderFlow(true)}
+async function saveMatrix(old,data){if(old?.id)await updateDoc(doc(db,'empresa_matriz_competencias',old.id),{...data,atualizadoEm:serverTimestamp(),atualizadoPor:state.user?.uid||''});else await addDoc(collection(db,'empresa_matriz_competencias'),{...data,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||'',atualizadoEm:serverTimestamp()})}
 
-async function deleteTraining(id,d){
-  if(d.events.some(e=>e.treinamentoId===id)) return toast('Este treinamento já possui realizações e não pode ser excluído.','err');
-  if(!confirm('Excluir este treinamento?')) return;
-  await deleteDoc(doc(db,'empresa_treinamentos',id));
-  for(const m of d.matrix.filter(x=>x.treinamentoId===id)) await deleteDoc(doc(db,'empresa_matriz_competencias',m.id));
-  clearCache();toast('Treinamento excluído.');renderFlow(true);
-}
+function renderStep3(d){const root=contentEl();const byEmployee=new Map();for(const c of d.cols)byEmployee.set(c.id,[]);for(const m of applicableRows(d))if(byEmployee.has(m.colaboradorId))byEmployee.get(m.colaboradorId).push(m.treinamentoNome||'Treinamento');const allDefined=d.plans.every(p=>p.publicoDefinido===true)&&applicableRows(d).length>0;root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>3. Definir público</h2><p>Abra cada treinamento e marque quem precisa realizá-lo.</p></div></div><div class="tr-grid">${d.plans.map(p=>{const count=d.matrix.filter(m=>m.treinamentoId===p.id&&m.aplicavel!==false&&norm(m.status)!=='nao aplicavel').length;return `<article class="tr-card"><h3>${esc(p.titulo||'Treinamento')}</h3><p>${p.publicoDefinido===true?`${count} pessoa(s) definida(s)`:'Público ainda não definido'}</p><div class="tr-card-foot">${p.publicoDefinido===true?'<span class="tr-badge ok">Definido</span>':'<span class="tr-badge warn">Pendente</span>'}<button class="tr-btn ${p.publicoDefinido===true?'soft':'gold'}" data-audience="${p.id}">${p.publicoDefinido===true?'Revisar pessoas':'Definir pessoas'}</button></div></article>`}).join('')}</div>${allDefined?`<div class="tr-section" style="margin-top:14px"><div class="tr-section-head"><div><h3>Resumo gerado</h3><p>O sistema já relacionou cada funcionário aos seus treinamentos.</p></div></div><div class="tr-matrix-mini">${d.cols.map(c=>`<div class="tr-matrix-row"><strong>${esc(c.nome)}</strong><div class="tr-matrix-tags">${(byEmployee.get(c.id)||[]).map(t=>`<span class="tr-tag">${esc(t)}</span>`).join('')||'<span class="tr-tag">Nenhum treinamento obrigatório</span>'}</div></div>`).join('')}</div></div>${continueBlock('Público definido','Agora aparecem as realizações.',4,'Continuar para realizações')}`:`<div class="tr-alert" style="margin-top:14px"><strong>Conclua esta etapa:</strong> todos os treinamentos precisam ter pelo menos uma pessoa definida antes de avançar.</div>`}</section>`;root.querySelectorAll('[data-audience]').forEach(b=>b.addEventListener('click',()=>showAudience(d.plans.find(p=>p.id===b.dataset.audience),d)));bindContinue()}
+function showAudience(plan,d){const existing=d.matrix.filter(m=>m.treinamentoId===plan.id);const selected=new Set(existing.filter(m=>m.aplicavel!==false&&norm(m.status)!=='nao aplicavel').map(m=>m.colaboradorId));const people=d.cols.filter(c=>c.ativo!==false);const bg=modal('Quem precisa deste treinamento?',plan.titulo||'Treinamento',`<div class="tr-audience-tools"><label class="tr-audience-search"><input type="search" data-audience-search placeholder="Buscar por nome, função ou setor..." autocomplete="off"><span>⌕</span></label><div class="tr-audience-actions"><button class="tr-btn soft" type="button" data-select-visible>Selecionar visíveis</button><button class="tr-btn soft" type="button" data-clear-visible>Limpar visíveis</button></div></div><div class="tr-audience-meta"><span class="tr-badge warn" data-selected-count>0 selecionado(s)</span><span class="tr-badge" data-visible-count>0 exibido(s)</span><span class="tr-badge">${people.length} ativo(s)</span></div><div class="tr-people-list">${people.map(c=>`<label class="tr-person-card ${selected.has(c.id)?'selected':''}" data-person-card data-search="${esc(norm([c.nome,c.funcao,c.setor].filter(Boolean).join(' ')))}"><input type="checkbox" data-person value="${esc(c.id)}" ${selected.has(c.id)?'checked':''}><span class="tr-person-avatar">${esc(initials(c.nome))}</span><span class="tr-person-info"><strong>${esc(c.nome||'Funcionário')}</strong><small>${esc([c.funcao||'Sem função',c.setor||'Sem setor'].join(' • '))}</small></span></label>`).join('')||'<div class="tr-audience-empty">Nenhum funcionário ativo cadastrado.</div>'}</div><div class="tr-audience-footer"><div><strong data-footer-selected>0 pessoa(s) selecionada(s)</strong><small>Somente as pessoas marcadas ficarão obrigadas a realizar este treinamento.</small></div><button class="tr-btn primary" type="button" data-save-audience>Salvar pessoas</button></div>`);const search=bg.querySelector('[data-audience-search]');const cards=[...bg.querySelectorAll('[data-person-card]')];const checks=[...bg.querySelectorAll('[data-person]')];const visible=()=>cards.filter(c=>!c.classList.contains('hidden'));const update=()=>{cards.forEach(c=>c.classList.toggle('selected',!!c.querySelector('[data-person]')?.checked));const sc=checks.filter(c=>c.checked).length;bg.querySelector('[data-selected-count]').textContent=`${sc} selecionado(s)`;bg.querySelector('[data-visible-count]').textContent=`${visible().length} exibido(s)`;bg.querySelector('[data-footer-selected]').textContent=`${sc} pessoa(s) selecionada(s)`};search?.addEventListener('input',()=>{const term=norm(search.value);cards.forEach(c=>c.classList.toggle('hidden',!!term&&!String(c.dataset.search||'').includes(term)));update()});checks.forEach(c=>c.addEventListener('change',update));bg.querySelector('[data-select-visible]')?.addEventListener('click',()=>{visible().forEach(card=>{const c=card.querySelector('[data-person]');if(c)c.checked=true});update()});bg.querySelector('[data-clear-visible]')?.addEventListener('click',()=>{visible().forEach(card=>{const c=card.querySelector('[data-person]');if(c)c.checked=false});update()});bg.querySelector('[data-save-audience]').addEventListener('click',async()=>{const ids=new Set(checks.filter(x=>x.checked).map(x=>x.value));if(!ids.size)return toast('Selecione pelo menos um funcionário para este treinamento.','err');const map=new Map(existing.map(x=>[x.colaboradorId,x]));for(const c of d.cols){const old=map.get(c.id),applicable=ids.has(c.id),keepDone=applicable&&norm(old?.status)==='concluido';await saveMatrix(old,{empresaId:state.empresaId,colaboradorId:c.id,colaboradorNome:c.nome||'',treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',aplicavel:applicable,status:applicable?(keepDone?'Concluído':'Pendente'):'Não aplicável',eficaciaStatus:applicable?(old?.eficaciaStatus||'Pendente'):'Não aplicável'})}await updateDoc(doc(db,'empresa_treinamentos',plan.id),{publicoDefinido:true,publicoRevisaoNecessaria:false,publicoTotal:ids.size,publicoAtualizadoEm:serverTimestamp(),atualizadoEm:serverTimestamp()});bg.remove();clearCache();toast('Público salvo. A matriz foi atualizada automaticamente.');state.viewStep=3;renderFlow(true)});update();search?.focus()}
 
-async function invalidateAudiences(){
-  const d=await loadData();
-  for(const p of d.plans) await updateDoc(doc(db,'empresa_treinamentos',p.id),{publicoDefinido:false,publicoRevisaoNecessaria:true,atualizadoEm:serverTimestamp()});
-}
+async function ensurePid({colaboradorId,colaboradorNome,treinamentoId,treinamentoNome,origemId,motivo}){const pids=await qCompany('empresa_pids');const dup=pids.find(p=>p.autoGerado===true&&p.colaboradorId===colaboradorId&&p.origemId===origemId&&!['concluido','fechado'].includes(norm(p.status)));if(dup)return dup.id;const x=await addDoc(collection(db,'empresa_pids'),{empresaId:state.empresaId,colaboradorId,colaboradorNome,treinamentoId,treinamentoNome,origem:`Treinamento: ${treinamentoNome} — ${motivo}`,origemTipo:'treinamento',origemId,autoGerado:true,status:'Em andamento',objetivo:`Desenvolver a competência relacionada ao treinamento ${treinamentoNome}.`,competencias:motivo,acoes:`Reforçar conteúdo, acompanhar aplicação prática e realizar novo treinamento quando necessário.`,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});return x.id}
+async function recalcPlan(planId){const [planSnap,matrix]=await Promise.all([getDoc(doc(db,'empresa_treinamentos',planId)),qCompany('empresa_matriz_competencias')]);if(!planSnap.exists())return;const rows=matrix.filter(m=>m.treinamentoId===planId&&m.aplicavel!==false&&norm(m.status)!=='nao aplicavel');const allEffective=rows.length>0&&rows.every(m=>norm(m.status)==='concluido'&&norm(m.eficaciaStatus)==='eficaz');await updateDoc(doc(db,'empresa_treinamentos',planId),{status:allEffective?'Concluído':'Em andamento',atualizadoEm:serverTimestamp()})}
+function renderStep4(d){const root=contentEl();const applicable=applicableRows(d),pending=applicable.filter(m=>norm(m.status)!=='concluido'),openPids=d.pids.filter(p=>!['concluido','fechado'].includes(norm(p.status)));root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>4. Realizações</h2><p>Registre o treinamento quando ele acontecer.</p></div><button class="tr-btn gold" type="button" data-new-event ${pending.length?'':'disabled'}>Registrar realização</button></div>${openPids.length?`<div class="tr-alert error"><strong>${openPids.length} PID(s) em andamento.</strong> <button class="tr-btn soft" type="button" data-view-pids>Ver PID</button></div>`:''}${pending.length?`<div class="tr-grid">${d.plans.map(p=>{const rows=pending.filter(m=>m.treinamentoId===p.id);if(!rows.length)return'';return`<article class="tr-card"><h3>${esc(p.titulo||'Treinamento')}</h3><p>${rows.length} pessoa(s) ainda precisam concluir.</p><div class="tr-matrix-tags">${rows.slice(0,6).map(r=>`<span class="tr-tag">${esc(r.colaboradorNome)}</span>`).join('')}${rows.length>6?`<span class="tr-tag">+${rows.length-6}</span>`:''}</div></article>`}).join('')}</div>`:`<div class="tr-alert success"><strong>Todas as realizações obrigatórias foram concluídas.</strong></div>`}<div class="tr-section" style="margin-top:14px"><div class="tr-section-head"><div><h3>Últimas realizações</h3></div></div>${d.events.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Data</th><th>Participantes</th><th>Instrutor</th><th>Evidência</th></tr></thead><tbody>${d.events.slice(0,8).map(e=>`<tr><td><strong>${esc(e.treinamentoNome||'Treinamento')}</strong></td><td>${dateBr(e.data)}</td><td>${esc((e.participanteNomes||e.participantes?.map(x=>x.nome)||[]).join(', ')||'-')}</td><td>${esc(e.instrutor||'-')}</td><td>${e.evidenciaUrl?`<a href="${esc(e.evidenciaUrl)}" target="_blank" rel="noopener">Abrir</a>`:'-'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="tr-empty">Nenhuma realização registrada.</div>'}</div>${!pending.length&&applicable.length?continueBlock('Realizações em dia','Agora o sistema libera a avaliação de eficácia.',5,'Continuar para eficácia'):''}</section>`;root.querySelector('[data-new-event]')?.addEventListener('click',()=>showEventForm(d,pending));root.querySelector('[data-view-pids]')?.addEventListener('click',()=>renderAux('pid'));bindContinue()}
+function showEventForm(d,pending){const planIds=[...new Set(pending.map(m=>m.treinamentoId))],plans=d.plans.filter(p=>planIds.includes(p.id));const bg=modal('Registrar realização','Escolha o treinamento e informe quem participou.',`<form class="tr-form" data-event-form><div><label>Treinamento *</label><select name="treinamentoId" required><option value="">Selecione</option>${plans.map(p=>`<option value="${p.id}">${esc(p.titulo||'Treinamento')}</option>`).join('')}</select></div><div><label>Data *</label><input type="date" name="data" required></div><div><label>Instrutor</label><input name="instrutor"></div><div><label>Carga horária</label><input name="cargaHoraria"></div><div class="full"><label>Participantes e resultado</label><div data-participants><div class="tr-empty">Escolha um treinamento primeiro.</div></div></div><div><label>Evidência</label><input type="file" name="evidencia" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"></div><div class="full"><label>Observações</label><textarea name="observacoes"></textarea></div><div class="full"><button class="tr-btn primary" type="submit">Salvar realização</button></div></form>`);const form=bg.querySelector('[data-event-form]');form.elements.treinamentoId.addEventListener('change',()=>{const id=form.elements.treinamentoId.value,rows=pending.filter(m=>m.treinamentoId===id),box=form.querySelector('[data-participants]');box.innerHTML=rows.length?rows.map(r=>`<div class="tr-person-result"><input type="checkbox" data-attendee value="${r.colaboradorId}" data-name="${esc(r.colaboradorNome)}" checked><strong>${esc(r.colaboradorNome)}</strong><select data-result><option>Aprovado</option><option>Reprovado</option></select></div>`).join(''):'<div class="tr-empty">Nenhuma pendência.</div>'});form.addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(form),plan=d.plans.find(p=>p.id===f.get('treinamentoId')),attendees=[...form.querySelectorAll('[data-attendee]:checked')].map(ch=>({id:ch.value,nome:ch.dataset.name,resultado:ch.closest('.tr-person-result').querySelector('[data-result]').value}));if(!attendees.length)return toast('Marque pelo menos um participante.','err');let evidenciaUrl='',evidenciaPath='',evidenciaNome='';const file=form.elements.evidencia.files?.[0];if(file){evidenciaNome=file.name;evidenciaPath=`empresas/${state.empresaId}/treinamentos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const rr=ref(storage,evidenciaPath);await uploadBytes(rr,file);evidenciaUrl=await getDownloadURL(rr)}const eventRef=await addDoc(collection(db,'empresa_treinamento_eventos'),{empresaId:state.empresaId,treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',data:f.get('data'),instrutor:f.get('instrutor')||'',cargaHoraria:f.get('cargaHoraria')||'',participantes:attendees,participanteIds:attendees.map(x=>x.id),participanteNomes:attendees.map(x=>x.nome),resultado:attendees.every(x=>x.resultado==='Aprovado')?'Aprovado':'Misto',observacoes:f.get('observacoes')||'',evidenciaUrl,evidenciaPath,evidenciaNome,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});for(const a of attendees){const row=d.matrix.find(m=>m.treinamentoId===plan.id&&m.colaboradorId===a.id);if(!row)continue;if(a.resultado==='Aprovado')await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Concluído',eficaciaStatus:'Pendente',ultimaRealizacaoId:eventRef.id,ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});else{await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Pendente',eficaciaStatus:'Ineficaz',ultimaRealizacaoId:eventRef.id,ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});await ensurePid({colaboradorId:a.id,colaboradorNome:a.nome,treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',origemId:`${eventRef.id}:${a.id}`,motivo:'Resultado reprovado no treinamento.'})}}await updateDoc(doc(db,'empresa_treinamentos',plan.id),{status:'Em andamento',ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});bg.remove();clearCache();toast('Realização registrada.');state.viewStep=null;renderFlow(true)})}
+function renderStep5(d){const root=contentEl(),pending=applicableRows(d).filter(m=>norm(m.status)==='concluido'&&norm(m.eficaciaStatus)!=='eficaz');root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>5. Eficácia</h2><p>Confirme se o aprendizado foi aplicado.</p></div></div>${pending.length?`<div class="tr-grid">${pending.map(m=>`<article class="tr-card"><h3>${esc(m.colaboradorNome)}</h3><p><strong>${esc(m.treinamentoNome)}</strong><br>Realização: ${dateBr(m.ultimaRealizacaoData)}</p><div class="tr-card-foot"><span class="tr-badge warn">Aguardando eficácia</span><button class="tr-btn gold" data-efficacy="${m.id}">Avaliar</button></div></article>`).join('')}</div>`:`<div class="tr-alert success"><strong>Todas as eficácias estão validadas.</strong></div>`}</section>`;root.querySelectorAll('[data-efficacy]').forEach(b=>b.addEventListener('click',()=>showEfficacy(d.matrix.find(m=>m.id===b.dataset.efficacy))));if(!pending.length){state.viewStep=6;setTimeout(()=>renderFlow(true),50)}}
+function showEfficacy(row){const bg=modal('Avaliar eficácia',`${row.colaboradorNome} • ${row.treinamentoNome}`,`<form class="tr-form" data-efficacy-form><div><label>Resultado *</label><select name="resultado" required><option>Eficaz</option><option>Ineficaz</option></select></div><div><label>Data</label><input type="date" name="data"></div><div><label>Avaliador</label><input name="avaliador"></div><div class="full"><label>Observações</label><textarea name="observacoes"></textarea></div><div class="full"><button class="tr-btn primary" type="submit">Salvar avaliação</button></div></form>`);bg.querySelector('[data-efficacy-form]').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget),result=f.get('resultado');if(result==='Eficaz')await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Concluído',eficaciaStatus:'Eficaz',eficaciaData:f.get('data')||'',eficaciaAvaliador:f.get('avaliador')||'',eficaciaObservacoes:f.get('observacoes')||'',atualizadoEm:serverTimestamp()});else{await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Pendente',eficaciaStatus:'Ineficaz',eficaciaData:f.get('data')||'',eficaciaAvaliador:f.get('avaliador')||'',eficaciaObservacoes:f.get('observacoes')||'',atualizadoEm:serverTimestamp()});await ensurePid({colaboradorId:row.colaboradorId,colaboradorNome:row.colaboradorNome,treinamentoId:row.treinamentoId,treinamentoNome:row.treinamentoNome,origemId:`eficacia:${row.id}:${f.get('data')||Date.now()}`,motivo:'Treinamento avaliado como ineficaz.'})}await recalcPlan(row.treinamentoId);bg.remove();clearCache();toast(result==='Eficaz'?'Eficácia confirmada.':'Ineficácia registrada. O treinamento voltou para pendência e um PID foi aberto.');state.viewStep=null;renderFlow(true)})}
 
-function renderStep2(d){
-  const root=contentEl();
-  root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>2. Funcionários</h2><p>Cadastre as pessoas da empresa. Se elas já existem no Apontamento, importe para evitar retrabalho.</p></div><div><button class="tr-btn soft" type="button" data-import>Importar do Apontamento</button> <button class="tr-btn gold" type="button" data-new-employee>Novo funcionário</button></div></div>${d.cols.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Nome</th><th>Função</th><th>Setor</th><th>Admissão</th><th>Status</th><th></th></tr></thead><tbody>${d.cols.map(c=>`<tr><td><strong>${esc(c.nome||'')}</strong></td><td>${esc(c.funcao||'-')}</td><td>${esc(c.setor||'-')}</td><td>${dateBr(c.admissao)}</td><td>${badge(c.ativo===false?'Inativo':'Ativo')}</td><td><button class="tr-btn danger" data-delete-employee="${c.id}">Excluir</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="tr-empty"><strong>Nenhum funcionário cadastrado</strong>Importe do Apontamento ou cadastre manualmente. A definição de público só aparece depois.</div>`}${d.cols.length?continueBlock('Funcionários cadastrados','Agora o sistema pode relacionar pessoas aos treinamentos.',3,'Continuar para definir público'):''}</section>`;
-  root.querySelector('[data-import]')?.addEventListener('click',importEmployees);
-  root.querySelector('[data-new-employee]')?.addEventListener('click',showEmployeeForm);
-  root.querySelectorAll('[data-delete-employee]').forEach(b=>b.addEventListener('click',()=>deleteEmployee(b.dataset.deleteEmployee,d)));
-  bindContinue();
-}
+function inRange(v,from,to){if(!from&&!to)return true;if(!v)return false;const s=String(v).slice(0,10);if(from&&s<from)return false;if(to&&s>to)return false;return true}
+function isLate(row,d){const p=d.plans.find(x=>x.id===row.treinamentoId);return !!p?.dataPrevista&&String(p.dataPrevista).slice(0,10)<new Date().toISOString().slice(0,10)&&norm(row.status)!=='concluido'}
+function reportData(d){const f=state.reportFilters,employeeMap=new Map(d.cols.map(c=>[c.id,c])),planMap=new Map(d.plans.map(p=>[p.id,p]));const rows=applicableRows(d).filter(m=>{const c=employeeMap.get(m.colaboradorId),p=planMap.get(m.treinamentoId);if(f.trainingId&&m.treinamentoId!==f.trainingId)return false;if(f.employeeId&&m.colaboradorId!==f.employeeId)return false;if(f.sector&&norm(c?.setor)!==norm(f.sector))return false;const date=m.ultimaRealizacaoData||p?.dataPrevista||'';if(!inRange(date,f.from,f.to))return false;if(f.status==='pendente'&&norm(m.status)==='concluido')return false;if(f.status==='concluido'&&norm(m.status)!=='concluido')return false;if(f.status==='eficaz'&&norm(m.eficaciaStatus)!=='eficaz')return false;if(f.status==='ineficaz'&&norm(m.eficaciaStatus)!=='ineficaz')return false;if(f.status==='atrasado'&&!isLate(m,d))return false;return true});const events=d.events.filter(e=>{if(f.trainingId&&e.treinamentoId!==f.trainingId)return false;if(f.employeeId&&!(e.participanteIds||[]).includes(f.employeeId))return false;if(!inRange(e.data,f.from,f.to))return false;if(f.sector){const ids=new Set(d.cols.filter(c=>norm(c.setor)===norm(f.sector)).map(c=>c.id));if(!(e.participanteIds||[]).some(id=>ids.has(id)))return false}return true});const planIds=new Set(rows.map(r=>r.treinamentoId));const employeeIds=new Set(rows.map(r=>r.colaboradorId));const plans=d.plans.filter(p=>(!f.trainingId||p.id===f.trainingId)&&(!planIds.size||planIds.has(p.id)));const employees=d.cols.filter(c=>(!f.employeeId||c.id===f.employeeId)&&(!f.sector||norm(c.setor)===norm(f.sector))&&(!employeeIds.size||employeeIds.has(c.id)));return{rows,events,plans,employees,employeeMap,planMap}}
+function reportHeader(title,sub=''){return `<div class="tr-report-title"><div><h2>${esc(title)}</h2><p>${esc(sub)}</p></div><span class="tr-badge">${new Date().toLocaleString('pt-BR')}</span></div>`}
+function reportKpis(d,r){const completed=r.rows.filter(x=>norm(x.status)==='concluido').length,effective=r.rows.filter(x=>norm(x.eficaciaStatus)==='eficaz').length,late=r.rows.filter(x=>isLate(x,d)).length,evidences=r.events.filter(e=>e.evidenciaUrl).length;return `<div class="tr-report-kpis"><div class="tr-report-kpi"><small>Treinamentos</small><strong>${new Set(r.rows.map(x=>x.treinamentoId)).size}</strong></div><div class="tr-report-kpi"><small>Competências</small><strong>${r.rows.length}</strong></div><div class="tr-report-kpi"><small>Concluídas</small><strong>${completed}</strong></div><div class="tr-report-kpi"><small>Eficazes</small><strong>${effective}</strong></div><div class="tr-report-kpi"><small>Evidências</small><strong>${evidences}</strong></div></div><div class="tr-report-note">Conclusão: ${pct(completed,r.rows.length)} • Eficácia: ${pct(effective,r.rows.length)} • Atrasadas: ${late}</div>`}
+function reportGeneral(d,r){return `${reportHeader('Relatório geral de treinamentos',state.empresaNome)}${reportKpis(d,r)}<div class="tr-report-block"><h3>Resumo por treinamento</h3><div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Previsão</th><th>Obrigatórios</th><th>Concluídos</th><th>Eficazes</th><th>Pendentes</th><th>Evidências</th></tr></thead><tbody>${r.plans.map(p=>{const rows=r.rows.filter(x=>x.treinamentoId===p.id),ev=r.events.filter(e=>e.treinamentoId===p.id);return `<tr><td><strong>${esc(p.titulo||'Treinamento')}</strong></td><td>${dateBr(p.dataPrevista)}</td><td>${rows.length}</td><td>${rows.filter(x=>norm(x.status)==='concluido').length}</td><td>${rows.filter(x=>norm(x.eficaciaStatus)==='eficaz').length}</td><td>${rows.filter(x=>norm(x.status)!=='concluido').length}</td><td>${ev.filter(x=>x.evidenciaUrl).length}</td></tr>`}).join('')||'<tr><td colspan="7">Sem dados no filtro.</td></tr>'}</tbody></table></div></div>`}
+function reportTraining(d,r){return `${reportHeader('Relatório por treinamento',state.empresaNome)}${r.plans.map(p=>{const rows=r.rows.filter(x=>x.treinamentoId===p.id),events=r.events.filter(e=>e.treinamentoId===p.id);return `<div class="tr-report-block"><h3>${esc(p.titulo||'Treinamento')}</h3><div class="tr-report-note">Previsão: ${dateBr(p.dataPrevista)} • Instrutor: ${esc(p.instrutor||'-')} • Carga: ${esc(p.cargaHoraria||'-')} • Público: ${rows.length}</div><div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Função/Setor</th><th>Status</th><th>Realização</th><th>Eficácia</th><th>Avaliador</th></tr></thead><tbody>${rows.map(x=>{const c=r.employeeMap.get(x.colaboradorId);return `<tr><td><strong>${esc(x.colaboradorNome)}</strong></td><td>${esc([c?.funcao,c?.setor].filter(Boolean).join(' • ')||'-')}</td><td>${badge(x.status)}</td><td>${dateBr(x.ultimaRealizacaoData)}</td><td>${badge(x.eficaciaStatus)}</td><td>${esc(x.eficaciaAvaliador||'-')}</td></tr>`}).join('')||'<tr><td colspan="6">Sem participantes no filtro.</td></tr>'}</tbody></table></div>${events.filter(e=>e.evidenciaUrl).length?`<div class="tr-report-note">Evidências: ${events.filter(e=>e.evidenciaUrl).map(e=>esc(e.evidenciaNome||'arquivo')).join(', ')}</div>`:''}</div>`}).join('')||'<div class="tr-empty">Sem treinamento no filtro.</div>'}`}
+function reportEmployee(d,r){return `${reportHeader('Dossiê por funcionário',state.empresaNome)}${r.employees.map(c=>{const rows=r.rows.filter(x=>x.colaboradorId===c.id);return `<div class="tr-report-block"><h3>${esc(c.nome)}</h3><div class="tr-report-note">${esc(c.funcao||'-')} • ${esc(c.setor||'-')} • Admissão: ${dateBr(c.admissao)}</div><div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Status</th><th>Realização</th><th>Eficácia</th><th>Avaliador</th><th>Observações</th></tr></thead><tbody>${rows.map(x=>`<tr><td><strong>${esc(x.treinamentoNome)}</strong></td><td>${badge(x.status)}</td><td>${dateBr(x.ultimaRealizacaoData)}</td><td>${badge(x.eficaciaStatus)}</td><td>${esc(x.eficaciaAvaliador||'-')}</td><td>${esc(x.eficaciaObservacoes||'-')}</td></tr>`).join('')||'<tr><td colspan="6">Sem treinamentos no filtro.</td></tr>'}</tbody></table></div></div>`}).join('')||'<div class="tr-empty">Sem funcionário no filtro.</div>'}`}
+function reportMatrix(d,r){const plans=r.plans.length?r.plans:d.plans,employees=r.employees.length?r.employees:d.cols;return `${reportHeader('Matriz de competências',state.empresaNome)}<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th>${plans.map(p=>`<th>${esc(p.titulo||'Treinamento')}</th>`).join('')}</tr></thead><tbody>${employees.map(c=>`<tr><td><strong>${esc(c.nome)}</strong><br><small>${esc(c.setor||'')}</small></td>${plans.map(p=>{const x=d.matrix.find(m=>m.colaboradorId===c.id&&m.treinamentoId===p.id);if(!x||x.aplicavel===false||norm(x.status)==='nao aplicavel')return '<td>—</td>';return `<td>${badge(x.status)}<br>${norm(x.status)==='concluido'?badge(x.eficaciaStatus):''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div>`}
+function reportPending(d,r){const rows=r.rows.filter(x=>norm(x.status)!=='concluido'||norm(x.eficaciaStatus)!=='eficaz');return `${reportHeader('Pendências e atrasados',state.empresaNome)}<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Treinamento</th><th>Previsão</th><th>Status</th><th>Eficácia</th><th>Situação</th></tr></thead><tbody>${rows.map(x=>{const p=r.planMap.get(x.treinamentoId);return `<tr><td><strong>${esc(x.colaboradorNome)}</strong></td><td>${esc(x.treinamentoNome)}</td><td>${dateBr(p?.dataPrevista)}</td><td>${badge(x.status)}</td><td>${badge(x.eficaciaStatus)}</td><td>${isLate(x,d)?'<span class="tr-badge bad">Atrasado</span>':'<span class="tr-badge warn">Pendente</span>'}</td></tr>`}).join('')||'<tr><td colspan="6">Nenhuma pendência no filtro.</td></tr>'}</tbody></table></div>`}
+function reportEfficacy(d,r){return `${reportHeader('Relatório de eficácia',state.empresaNome)}<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Treinamento</th><th>Realização</th><th>Resultado</th><th>Data avaliação</th><th>Avaliador</th><th>Observações</th></tr></thead><tbody>${r.rows.map(x=>`<tr><td><strong>${esc(x.colaboradorNome)}</strong></td><td>${esc(x.treinamentoNome)}</td><td>${dateBr(x.ultimaRealizacaoData)}</td><td>${badge(x.eficaciaStatus)}</td><td>${dateBr(x.eficaciaData)}</td><td>${esc(x.eficaciaAvaliador||'-')}</td><td>${esc(x.eficaciaObservacoes||'-')}</td></tr>`).join('')||'<tr><td colspan="7">Sem dados de eficácia no filtro.</td></tr>'}</tbody></table></div>`}
+function reportEvidence(d,r){const ev=r.events.filter(e=>e.evidenciaUrl);return `${reportHeader('Evidências de treinamentos',state.empresaNome)}<div class="tr-evidence-list">${ev.map(e=>`<div class="tr-evidence"><div><strong>${esc(e.treinamentoNome||'Treinamento')}</strong><small>${dateBr(e.data)} • ${esc((e.participanteNomes||[]).join(', ')||'-')} • ${esc(e.evidenciaNome||'Arquivo')}</small></div><a class="tr-btn soft" href="${esc(e.evidenciaUrl)}" target="_blank" rel="noopener">Abrir evidência</a></div>`).join('')||'<div class="tr-empty">Nenhuma evidência anexada no filtro.</div>'}</div>`}
+function reportAudit(d,r){const openPids=d.pids.filter(p=>!['concluido','fechado'].includes(norm(p.status)));return `<div class="tr-audit-cover"><h2>Dossiê de auditoria — Treinamentos e Competências</h2><p>${esc(state.empresaNome)} • Gerado em ${new Date().toLocaleString('pt-BR')}</p></div>${reportKpis(d,r)}<div class="tr-report-block"><h3>1. Plano de treinamentos</h3>${reportGeneral(d,r).replace(reportHeader('Relatório geral de treinamentos',state.empresaNome),'')}</div><div class="tr-report-block"><h3>2. Matriz de competências</h3>${reportMatrix(d,r).replace(reportHeader('Matriz de competências',state.empresaNome),'')}</div><div class="tr-report-block"><h3>3. Realizações e evidências</h3>${reportEvidence(d,r).replace(reportHeader('Evidências de treinamentos',state.empresaNome),'')}</div><div class="tr-report-block"><h3>4. Eficácia</h3>${reportEfficacy(d,r).replace(reportHeader('Relatório de eficácia',state.empresaNome),'')}</div><div class="tr-report-block"><h3>5. Integrações</h3><div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Status</th><th>Avaliação 30 dias</th><th>Resultado</th></tr></thead><tbody>${d.integrations.map(x=>`<tr><td>${esc(x.colaboradorNome||'-')}</td><td>${badge(x.status||'Em andamento')}</td><td>${dateBr(x.dataAvaliacao30)}</td><td>${esc(x.resultado30||'-')}</td></tr>`).join('')||'<tr><td colspan="4">Sem integrações.</td></tr>'}</tbody></table></div></div><div class="tr-report-block"><h3>6. PIDs</h3><div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Origem</th><th>Status</th><th>Prazo</th><th>Objetivo</th></tr></thead><tbody>${d.pids.map(x=>`<tr><td>${esc(x.colaboradorNome||'-')}</td><td>${esc(x.origem||'-')}</td><td>${badge(x.status||'Em andamento')}</td><td>${dateBr(x.prazo)}</td><td>${esc(x.objetivo||'-')}</td></tr>`).join('')||'<tr><td colspan="5">Sem PID.</td></tr>'}</tbody></table></div><div class="tr-report-note">PID(s) abertos: ${openPids.length}</div></div>`}
+function buildReport(d){const r=reportData(d);const t=state.reportFilters.type;return t==='treinamento'?reportTraining(d,r):t==='funcionario'?reportEmployee(d,r):t==='matriz'?reportMatrix(d,r):t==='pendencias'?reportPending(d,r):t==='eficacia'?reportEfficacy(d,r):t==='evidencias'?reportEvidence(d,r):t==='auditoria'?reportAudit(d,r):reportGeneral(d,r)}
+function renderResults(d){const root=contentEl(),sectors=[...new Set(d.cols.map(c=>c.setor).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR')),f=state.reportFilters;root.innerHTML=`<div class="tr-alert success"><strong>Fluxo operacional concluído.</strong> Resultados, evidências e documentação de auditoria estão liberados.</div><section class="tr-section"><div class="tr-section-head"><div><h2>6. Resultados, relatórios e evidências</h2><p>Central de demonstração do processo de treinamentos.</p></div></div><div class="tr-report-shell"><nav class="tr-report-menu">${Object.entries(REPORT_LABELS).map(([id,label])=>`<button type="button" data-report-type="${id}" class="${f.type===id?'active':''}">${esc(label)}</button>`).join('')}</nav><div class="tr-report-main"><div class="tr-report-filters"><label>De<input type="date" data-r-from value="${esc(f.from)}"></label><label>Até<input type="date" data-r-to value="${esc(f.to)}"></label><label>Treinamento<select data-r-training><option value="">Todos</option>${d.plans.map(p=>`<option value="${p.id}" ${f.trainingId===p.id?'selected':''}>${esc(p.titulo||'Treinamento')}</option>`).join('')}</select></label><label>Funcionário<select data-r-employee><option value="">Todos</option>${d.cols.map(c=>`<option value="${c.id}" ${f.employeeId===c.id?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label><label>Setor<select data-r-sector><option value="">Todos</option>${sectors.map(s=>`<option ${f.sector===s?'selected':''}>${esc(s)}</option>`).join('')}</select></label><label>Status<select data-r-status><option value="">Todos</option><option value="pendente" ${f.status==='pendente'?'selected':''}>Pendente</option><option value="concluido" ${f.status==='concluido'?'selected':''}>Concluído</option><option value="eficaz" ${f.status==='eficaz'?'selected':''}>Eficaz</option><option value="ineficaz" ${f.status==='ineficaz'?'selected':''}>Ineficaz</option><option value="atrasado" ${f.status==='atrasado'?'selected':''}>Atrasado</option></select></label></div><div class="tr-report-actions"><button class="tr-btn soft" data-r-clear>Limpar filtros</button><button class="tr-btn primary" data-r-print>Imprimir / Salvar PDF</button></div><div class="tr-report-preview" data-report-preview>${buildReport(d)}</div></div></div></section><section class="tr-section"><div class="tr-section-head"><div><h2>Gestão contínua</h2><p>Integração, PID e carreira permanecem ligados ao histórico apresentado nos relatórios.</p></div></div><div class="tr-aux-grid"><div class="tr-aux"><h3>Integração</h3><p>${d.integrations.length} registro(s).</p><button class="tr-btn soft" data-aux="integracao">Abrir integração</button></div><div class="tr-aux"><h3>PID</h3><p>${d.pids.filter(p=>!['concluido','fechado'].includes(norm(p.status))).length} aberto(s).</p><button class="tr-btn gold" data-aux="pid">Abrir PID</button></div><div class="tr-aux"><h3>Carreira</h3><p>${d.careers.length} registro(s).</p><button class="tr-btn soft" data-aux="carreira">Abrir carreira</button></div></div></section>`;root.querySelectorAll('[data-report-type]').forEach(b=>b.addEventListener('click',()=>{state.reportFilters.type=b.dataset.reportType;renderResults(d)}));const bind=(sel,key)=>root.querySelector(sel)?.addEventListener('change',e=>{state.reportFilters[key]=e.target.value;renderResults(d)});bind('[data-r-from]','from');bind('[data-r-to]','to');bind('[data-r-training]','trainingId');bind('[data-r-employee]','employeeId');bind('[data-r-sector]','sector');bind('[data-r-status]','status');root.querySelector('[data-r-clear]')?.addEventListener('click',()=>{state.reportFilters={type:state.reportFilters.type,from:'',to:'',trainingId:'',employeeId:'',sector:'',status:''};renderResults(d)});root.querySelector('[data-r-print]')?.addEventListener('click',printCurrentReport);root.querySelectorAll('[data-aux]').forEach(b=>b.addEventListener('click',()=>renderAux(b.dataset.aux)))}
+function printCurrentReport(){const preview=document.querySelector('[data-report-preview]');if(!preview)return;const frame=document.createElement('iframe');frame.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(frame);const w=frame.contentWindow,d=frame.contentDocument;d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(REPORT_LABELS[state.reportFilters.type]||'Relatório')}</title><style>@page{size:A4 landscape;margin:8mm}body{font-family:Arial,sans-serif;color:#173846;font-size:10px}h2,h3{color:#073F5A;margin:8px 0}.tr-report-title{display:flex;justify-content:space-between;border-bottom:2px solid #073F5A;padding-bottom:6px;margin-bottom:8px}.tr-report-title p{margin:2px 0}.tr-badge{display:inline-block;border:1px solid #b7cbd3;border-radius:10px;padding:2px 5px;font-size:8px}.tr-report-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:7px 0}.tr-report-kpi{border:1px solid #cfdfe5;padding:6px;border-radius:6px}.tr-report-kpi small{display:block}.tr-report-kpi strong{font-size:16px;color:#073F5A}.tr-table-wrap{overflow:visible}.tr-table{width:100%;border-collapse:collapse}.tr-table th,.tr-table td{border:1px solid #d7e2e6;padding:4px;text-align:left;vertical-align:top}.tr-table th{background:#eef4f6;font-size:8px}.tr-report-block{margin-top:9px;page-break-inside:auto}.tr-evidence{border:1px solid #d7e2e6;padding:5px;margin:4px 0}.tr-evidence a{color:#073F5A}.tr-btn{display:none}.tr-audit-cover{border:2px solid #073F5A;padding:10px;margin-bottom:8px}.tr-report-note{font-size:8px;color:#546c76}</style></head><body><div style="font-weight:bold;font-size:15px;color:#073F5A">Excellence System®</div><div>${esc(state.empresaNome)}</div>${preview.innerHTML}<div style="margin-top:12px;border-top:1px solid #aaa;padding-top:5px;font-size:8px">Relatório gerado automaticamente pelo Excellence System® • ${new Date().toLocaleString('pt-BR')}</div></body></html>`);d.close();setTimeout(()=>{w.focus();w.print();setTimeout(()=>frame.remove(),1000)},250)}
 
-function showEmployeeForm(){
-  const bg=modal('Novo funcionário','Cadastre apenas as informações essenciais para a gestão dos treinamentos.',`<form class="tr-form" data-employee-form><div><label>Nome *</label><input name="nome" required></div><div><label>Função</label><input name="funcao"></div><div><label>Setor</label><input name="setor"></div><div><label>Data de admissão</label><input type="date" name="admissao"></div><div class="full"><button class="tr-btn primary" type="submit">Salvar funcionário</button></div></form>`);
-  bg.querySelector('[data-employee-form]').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const f=new FormData(e.currentTarget);
-    await addDoc(collection(db,'empresa_colaboradores'),{empresaId:state.empresaId,nome:f.get('nome'),funcao:f.get('funcao')||'',setor:f.get('setor')||'',admissao:f.get('admissao')||'',ativo:true,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});
-    await invalidateAudiences();
-    bg.remove();clearCache();toast('Funcionário cadastrado.');state.viewStep=2;renderFlow(true);
-  });
-}
+async function renderAux(type){const main=mainEl();if(!main)return;const map={integracao:['Integração','empresa_integracoes'],pid:['PID','empresa_pids'],carreira:['Carreira','empresa_carreiras']};const [title,col]=map[type],rows=await qCompany(col);main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO CONTÍNUA</small><h1>${title}</h1><p>${esc(state.empresaNome)}</p></div><div class="tr-hero-actions"><button class="tr-btn soft" data-back-flow>Voltar aos resultados</button></div></div><section class="tr-section" style="margin-top:16px"><div class="tr-section-head"><div><h2>${title}</h2><p>Área complementar do desenvolvimento profissional.</p></div><button class="tr-btn gold" data-new-aux>Novo registro</button></div>${rows.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Resumo</th><th>Status</th><th>Data/Prazo</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${esc(r.colaboradorNome||'-')}</strong></td><td>${esc(r.objetivo||r.origem||r.resultado30||r.cargoObjetivo||'-')}</td><td>${badge(r.status||'Em andamento')}</td><td>${dateBr(r.prazo||r.dataAvaliacao30||r.data||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="tr-empty">Nenhum registro.</div>'}</section></section>`;main.querySelector('[data-back-flow]')?.addEventListener('click',()=>{state.viewStep=6;renderFlow(true)});main.querySelector('[data-new-aux]')?.addEventListener('click',()=>showAuxForm(type))}
+async function showAuxForm(type){const d=await loadData();let fields='';if(type==='integracao')fields=`<div><label>Data de admissão</label><input type="date" name="data"></div><div><label>Avaliação 30 dias</label><input type="date" name="dataAvaliacao30"></div><div><label>Institucional</label><select name="institucional"><option>Pendente</option><option>Concluído</option></select></div><div><label>SGQ</label><select name="sgq"><option>Pendente</option><option>Concluído</option></select></div><div><label>Técnica</label><select name="tecnica"><option>Pendente</option><option>Concluído</option></select></div><div><label>Liberação gestor</label><select name="gestor"><option>Pendente</option><option>Concluído</option></select></div><div class="full"><label>Resultado 30 dias</label><textarea name="resultado30"></textarea></div>`;if(type==='pid')fields=`<div><label>Origem</label><input name="origem"></div><div><label>Prazo</label><input type="date" name="prazo"></div><div class="full"><label>Objetivo</label><textarea name="objetivo"></textarea></div><div class="full"><label>Competências/lacunas</label><textarea name="competencias"></textarea></div><div class="full"><label>Ações</label><textarea name="acoes"></textarea></div>`;if(type==='carreira')fields=`<div><label>Cargo atual</label><input name="cargoAtual"></div><div><label>Objetivo futuro</label><input name="cargoObjetivo"></div><div><label>Nível atual (1 a 4)</label><input type="number" min="1" max="4" name="nivelAtual"></div><div><label>Nível esperado (1 a 4)</label><input type="number" min="1" max="4" name="nivelEsperado"></div><div class="full"><label>Lacunas</label><textarea name="lacunas"></textarea></div><div class="full"><label>Plano de ação</label><textarea name="acoes"></textarea></div>`;const bg=modal(type==='integracao'?'Nova integração':type==='pid'?'Novo PID':'Carreira e evolução','',`<form class="tr-form" data-aux-form><div><label>Funcionário *</label><select name="colaboradorId" required><option value="">Selecione</option>${d.cols.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></div><div><label>Status</label><select name="status"><option>Em andamento</option><option>Pendente</option><option>Concluído</option></select></div>${fields}<div class="full"><button class="tr-btn primary" type="submit">Salvar</button></div></form>`);bg.querySelector('[data-aux-form]').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget),sel=e.currentTarget.elements.colaboradorId,col=type==='integracao'?'empresa_integracoes':type==='pid'?'empresa_pids':'empresa_carreiras',data={empresaId:state.empresaId,colaboradorId:f.get('colaboradorId'),colaboradorNome:sel.selectedOptions[0]?.textContent||'',status:f.get('status')||'Em andamento',criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''};for(const[k,v]of f.entries())if(!['colaboradorId','status'].includes(k))data[k]=v;await addDoc(collection(db,col),data);bg.remove();clearCache();toast('Registro salvo.');renderAux(type)})}
 
-async function importEmployees(){
-  const prod=await qCompany('empresa_funcionarios');
-  const d=await loadData();
-  const names=new Set(d.cols.map(x=>norm(x.nome)));
-  let count=0;
-  for(const f of prod){
-    const nome=String(f.nome||'').trim();
-    if(!nome||names.has(norm(nome))) continue;
-    await addDoc(collection(db,'empresa_colaboradores'),{empresaId:state.empresaId,nome,funcao:f.funcao||'',setor:f.equipeNome||f.setor||'',ativo:f.ativo!==false,origemApontamentoId:f.id,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});
-    names.add(norm(nome));count++;
-  }
-  if(count) await invalidateAudiences();
-  clearCache();toast(count?`${count} funcionário(s) importado(s).`:'Nenhum funcionário novo para importar.');state.viewStep=2;renderFlow(true);
-}
-
-async function deleteEmployee(id,d){
-  if(!confirm('Excluir este funcionário da área de treinamentos?')) return;
-  await deleteDoc(doc(db,'empresa_colaboradores',id));
-  for(const m of d.matrix.filter(x=>x.colaboradorId===id)) await deleteDoc(doc(db,'empresa_matriz_competencias',m.id));
-  await invalidateAudiences();clearCache();toast('Funcionário excluído.');state.viewStep=2;renderFlow(true);
-}
-
-async function saveMatrix(old,data){
-  if(old?.id) await updateDoc(doc(db,'empresa_matriz_competencias',old.id),{...data,atualizadoEm:serverTimestamp(),atualizadoPor:state.user?.uid||''});
-  else await addDoc(collection(db,'empresa_matriz_competencias'),{...data,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||'',atualizadoEm:serverTimestamp()});
-}
-
-function renderStep3(d){
-  const root=contentEl();
-  const byEmployee=new Map();
-  for(const c of d.cols) byEmployee.set(c.id,[]);
-  for(const m of applicableRows(d)) if(byEmployee.has(m.colaboradorId)) byEmployee.get(m.colaboradorId).push(m.treinamentoNome||'Treinamento');
-  const allDefined=d.plans.every(p=>p.publicoDefinido===true)&&applicableRows(d).length>0;
-  root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>3. Definir público</h2><p>Abra cada treinamento e marque quem precisa realizá-lo. A matriz é criada automaticamente em segundo plano.</p></div></div><div class="tr-grid">${d.plans.map(p=>{const count=d.matrix.filter(m=>m.treinamentoId===p.id&&m.aplicavel!==false&&norm(m.status)!=='nao aplicavel').length;return `<article class="tr-card"><h3>${esc(p.titulo||'Treinamento')}</h3><p>${p.publicoDefinido===true?`${count} pessoa(s) definida(s)`:'Público ainda não definido'}</p><div class="tr-card-foot">${p.publicoDefinido===true?'<span class="tr-badge ok">Definido</span>':'<span class="tr-badge warn">Pendente</span>'}<button class="tr-btn ${p.publicoDefinido===true?'soft':'gold'}" data-audience="${p.id}">${p.publicoDefinido===true?'Revisar pessoas':'Definir pessoas'}</button></div></article>`}).join('')}</div>${allDefined?`<div class="tr-section" style="margin-top:14px"><div class="tr-section-head"><div><h3>Resumo gerado</h3><p>O sistema já relacionou cada funcionário aos seus treinamentos.</p></div></div><div class="tr-matrix-mini">${d.cols.map(c=>`<div class="tr-matrix-row"><strong>${esc(c.nome)}</strong><div class="tr-matrix-tags">${(byEmployee.get(c.id)||[]).map(t=>`<span class="tr-tag">${esc(t)}</span>`).join('')||'<span class="tr-tag">Nenhum treinamento obrigatório</span>'}</div></div>`).join('')}</div></div>${continueBlock('Público definido','Agora aparecem as realizações. Até aqui, elas permaneceram ocultas.',4,'Continuar para realizações')}`:`<div class="tr-alert" style="margin-top:14px"><strong>Conclua esta etapa:</strong> todos os treinamentos precisam ter pelo menos uma pessoa definida antes de avançar.</div>`}</section>`;
-  root.querySelectorAll('[data-audience]').forEach(b=>b.addEventListener('click',()=>showAudience(d.plans.find(p=>p.id===b.dataset.audience),d)));
-  bindContinue();
-}
-
-function showAudience(plan,d){
-  const existing=d.matrix.filter(m=>m.treinamentoId===plan.id);
-  const selected=new Set(existing.filter(m=>m.aplicavel!==false&&norm(m.status)!=='nao aplicavel').map(m=>m.colaboradorId));
-  const people=d.cols.filter(c=>c.ativo!==false);
-  const bg=modal('Quem precisa deste treinamento?',plan.titulo||'Treinamento',`
-    <div class="tr-audience-tools">
-      <label class="tr-audience-search"><input type="search" data-audience-search placeholder="Buscar por nome, função ou setor..." autocomplete="off"><span>⌕</span></label>
-      <div class="tr-audience-actions"><button class="tr-btn soft" type="button" data-select-visible>Selecionar visíveis</button><button class="tr-btn soft" type="button" data-clear-visible>Limpar visíveis</button></div>
-    </div>
-    <div class="tr-audience-meta"><span class="tr-badge warn" data-selected-count>0 selecionado(s)</span><span class="tr-badge" data-visible-count>0 exibido(s)</span><span class="tr-badge">${people.length} ativo(s)</span></div>
-    <div class="tr-people-list" data-people-list>${people.map(c=>`<label class="tr-person-card ${selected.has(c.id)?'selected':''}" data-person-card data-search="${esc(norm([c.nome,c.funcao,c.setor].filter(Boolean).join(' ')))}"><input type="checkbox" data-person value="${esc(c.id)}" ${selected.has(c.id)?'checked':''}><span class="tr-person-avatar">${esc(initials(c.nome))}</span><span class="tr-person-info"><strong>${esc(c.nome||'Funcionário')}</strong><small>${esc([c.funcao||'Sem função',c.setor||'Sem setor'].join(' • '))}</small></span></label>`).join('')||'<div class="tr-audience-empty">Nenhum funcionário ativo cadastrado.</div>'}</div>
-    <div class="tr-audience-footer"><div><strong data-footer-selected>0 pessoa(s) selecionada(s)</strong><small>Somente as pessoas marcadas ficarão obrigadas a realizar este treinamento.</small></div><button class="tr-btn primary" type="button" data-save-audience>Salvar pessoas</button></div>`);
-  const search=bg.querySelector('[data-audience-search]');
-  const cards=[...bg.querySelectorAll('[data-person-card]')];
-  const checks=[...bg.querySelectorAll('[data-person]')];
-  const visibleCards=()=>cards.filter(card=>!card.classList.contains('hidden'));
-  const update=()=>{
-    cards.forEach(card=>card.classList.toggle('selected',!!card.querySelector('[data-person]')?.checked));
-    const selectedCount=checks.filter(c=>c.checked).length;
-    const visibleCount=visibleCards().length;
-    bg.querySelector('[data-selected-count]').textContent=`${selectedCount} selecionado(s)`;
-    bg.querySelector('[data-visible-count]').textContent=`${visibleCount} exibido(s)`;
-    bg.querySelector('[data-footer-selected]').textContent=`${selectedCount} pessoa(s) selecionada(s)`;
-  };
-  const filter=()=>{
-    const term=norm(search?.value||'');
-    cards.forEach(card=>card.classList.toggle('hidden',!!term&&!String(card.dataset.search||'').includes(term)));
-    update();
-  };
-  checks.forEach(ch=>ch.addEventListener('change',update));
-  search?.addEventListener('input',filter);
-  bg.querySelector('[data-select-visible]')?.addEventListener('click',()=>{
-    visibleCards().forEach(card=>{const c=card.querySelector('[data-person]');if(c)c.checked=true});
-    update();
-  });
-  bg.querySelector('[data-clear-visible]')?.addEventListener('click',()=>{
-    visibleCards().forEach(card=>{const c=card.querySelector('[data-person]');if(c)c.checked=false});
-    update();
-  });
-  bg.querySelector('[data-save-audience]').addEventListener('click',async()=>{
-    const ids=new Set(checks.filter(x=>x.checked).map(x=>x.value));
-    if(!ids.size) return toast('Selecione pelo menos um funcionário para este treinamento.','err');
-    const map=new Map(existing.map(x=>[x.colaboradorId,x]));
-    for(const c of d.cols){
-      const old=map.get(c.id);
-      const applicable=ids.has(c.id);
-      const keepDone=applicable&&norm(old?.status)==='concluido';
-      await saveMatrix(old,{empresaId:state.empresaId,colaboradorId:c.id,colaboradorNome:c.nome||'',treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',aplicavel:applicable,status:applicable?(keepDone?'Concluído':'Pendente'):'Não aplicável',eficaciaStatus:applicable?(old?.eficaciaStatus||'Pendente'):'Não aplicável'});
-    }
-    await updateDoc(doc(db,'empresa_treinamentos',plan.id),{publicoDefinido:true,publicoRevisaoNecessaria:false,publicoTotal:ids.size,publicoAtualizadoEm:serverTimestamp(),atualizadoEm:serverTimestamp()});
-    bg.remove();clearCache();toast('Público salvo. A matriz foi atualizada automaticamente.');state.viewStep=3;renderFlow(true);
-  });
-  update();
-  search?.focus();
-}
-
-async function ensurePid({colaboradorId,colaboradorNome,treinamentoId,treinamentoNome,origemId,motivo}){
-  const pids=await qCompany('empresa_pids');
-  const dup=pids.find(p=>p.autoGerado===true&&p.colaboradorId===colaboradorId&&p.origemId===origemId&&!['concluido','fechado'].includes(norm(p.status)));
-  if(dup) return dup.id;
-  const d=await addDoc(collection(db,'empresa_pids'),{empresaId:state.empresaId,colaboradorId,colaboradorNome,treinamentoId,treinamentoNome,origem:`Treinamento: ${treinamentoNome} — ${motivo}`,origemTipo:'treinamento',origemId,autoGerado:true,status:'Em andamento',objetivo:`Desenvolver a competência relacionada ao treinamento ${treinamentoNome}.`,competencias:motivo,acoes:`Reforçar conteúdo, acompanhar aplicação prática e realizar novo treinamento quando necessário.`,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});
-  return d.id;
-}
-
-async function recalcPlan(planId){
-  const [planSnap,matrix]=await Promise.all([getDoc(doc(db,'empresa_treinamentos',planId)),qCompany('empresa_matriz_competencias')]);
-  if(!planSnap.exists()) return;
-  const rows=matrix.filter(m=>m.treinamentoId===planId&&m.aplicavel!==false&&norm(m.status)!=='nao aplicavel');
-  const allEffective=rows.length>0&&rows.every(m=>norm(m.status)==='concluido'&&norm(m.eficaciaStatus)==='eficaz');
-  await updateDoc(doc(db,'empresa_treinamentos',planId),{status:allEffective?'Concluído':'Em andamento',atualizadoEm:serverTimestamp()});
-}
-
-function renderStep4(d){
-  const root=contentEl();
-  const applicable=applicableRows(d);
-  const pending=applicable.filter(m=>norm(m.status)!=='concluido');
-  const openPids=d.pids.filter(p=>!['concluido','fechado'].includes(norm(p.status)));
-  root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>4. Realizações</h2><p>Registre o treinamento quando ele realmente acontecer. Só aparecem pessoas que ainda estão pendentes.</p></div><button class="tr-btn gold" type="button" data-new-event ${pending.length?'':'disabled'}>Registrar realização</button></div>${openPids.length?`<div class="tr-alert error"><strong>${openPids.length} PID(s) em andamento.</strong> Reprovações ou ineficácias geram desenvolvimento automaticamente. <button class="tr-btn soft" type="button" data-view-pids style="margin-left:8px">Ver PID</button></div>`:''}${pending.length?`<div class="tr-grid">${d.plans.map(p=>{const rows=pending.filter(m=>m.treinamentoId===p.id);if(!rows.length)return '';return `<article class="tr-card"><h3>${esc(p.titulo||'Treinamento')}</h3><p>${rows.length} pessoa(s) ainda precisam concluir.</p><div class="tr-matrix-tags">${rows.slice(0,6).map(r=>`<span class="tr-tag">${esc(r.colaboradorNome)}</span>`).join('')}${rows.length>6?`<span class="tr-tag">+${rows.length-6}</span>`:''}</div></article>`}).join('')}</div>`:`<div class="tr-alert success"><strong>Todas as realizações obrigatórias foram concluídas.</strong> Agora a etapa de eficácia pode ser aberta.</div>`}<div class="tr-section" style="margin-top:14px"><div class="tr-section-head"><div><h3>Últimas realizações</h3><p>Histórico das atividades registradas.</p></div></div>${d.events.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Treinamento</th><th>Data</th><th>Participantes</th><th>Instrutor</th><th>Evidência</th></tr></thead><tbody>${d.events.slice(0,8).map(e=>`<tr><td><strong>${esc(e.treinamentoNome||'Treinamento')}</strong></td><td>${dateBr(e.data)}</td><td>${esc((e.participanteNomes||e.participantes?.map(x=>x.nome)||[]).join(', ')||'-')}</td><td>${esc(e.instrutor||'-')}</td><td>${e.evidenciaUrl?`<a href="${esc(e.evidenciaUrl)}" target="_blank" rel="noopener">Abrir</a>`:'-'}</td></tr>`).join('')}</tbody></table></div>`:'<div class="tr-empty">Nenhuma realização registrada ainda.</div>'}</div>${!pending.length&&applicable.length?continueBlock('Realizações em dia','Agora o sistema libera a avaliação de eficácia.',5,'Continuar para eficácia'):''}</section>`;
-  root.querySelector('[data-new-event]')?.addEventListener('click',()=>showEventForm(d,pending));
-  root.querySelector('[data-view-pids]')?.addEventListener('click',()=>renderAux('pid'));
-  bindContinue();
-}
-
-function showEventForm(d,pending){
-  const planIds=[...new Set(pending.map(m=>m.treinamentoId))];
-  const plans=d.plans.filter(p=>planIds.includes(p.id));
-  const bg=modal('Registrar realização','Escolha o treinamento e informe apenas quem realmente participou.',`<form class="tr-form" data-event-form><div><label>Treinamento *</label><select name="treinamentoId" required><option value="">Selecione</option>${plans.map(p=>`<option value="${p.id}">${esc(p.titulo||'Treinamento')}</option>`).join('')}</select></div><div><label>Data *</label><input type="date" name="data" required></div><div><label>Instrutor</label><input name="instrutor"></div><div><label>Carga horária</label><input name="cargaHoraria"></div><div class="full"><label>Participantes e resultado</label><div data-participants><div class="tr-empty">Escolha um treinamento primeiro.</div></div></div><div><label>Evidência (opcional)</label><input type="file" name="evidencia" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"></div><div class="full"><label>Observações</label><textarea name="observacoes"></textarea></div><div class="full"><button class="tr-btn primary" type="submit">Salvar realização</button></div></form>`);
-  const form=bg.querySelector('[data-event-form]');
-  const renderPeople=()=>{
-    const id=form.elements.treinamentoId.value;
-    const rows=pending.filter(m=>m.treinamentoId===id);
-    const box=form.querySelector('[data-participants]');
-    box.innerHTML=rows.length?rows.map(r=>`<div class="tr-person-result"><input type="checkbox" data-attendee value="${r.colaboradorId}" data-name="${esc(r.colaboradorNome)}" checked><strong>${esc(r.colaboradorNome)}</strong><select data-result><option>Aprovado</option><option>Reprovado</option></select></div>`).join(''):'<div class="tr-empty">Nenhuma pendência para este treinamento.</div>';
-  };
-  form.elements.treinamentoId.addEventListener('change',renderPeople);
-  form.addEventListener('submit',async e=>{
-    e.preventDefault();
-    const f=new FormData(form);
-    const plan=d.plans.find(p=>p.id===f.get('treinamentoId'));
-    const attendees=[...form.querySelectorAll('[data-attendee]:checked')].map(ch=>({id:ch.value,nome:ch.dataset.name,resultado:ch.closest('.tr-person-result').querySelector('[data-result]').value}));
-    if(!attendees.length) return toast('Marque pelo menos um participante.','err');
-    let evidenciaUrl='',evidenciaPath='',evidenciaNome='';
-    const file=form.elements.evidencia.files?.[0];
-    if(file){
-      evidenciaNome=file.name;
-      evidenciaPath=`empresas/${state.empresaId}/treinamentos/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-      const rr=ref(storage,evidenciaPath);
-      await uploadBytes(rr,file);
-      evidenciaUrl=await getDownloadURL(rr);
-    }
-    const eventRef=await addDoc(collection(db,'empresa_treinamento_eventos'),{empresaId:state.empresaId,treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',data:f.get('data'),instrutor:f.get('instrutor')||'',cargaHoraria:f.get('cargaHoraria')||'',participantes:attendees,participanteIds:attendees.map(x=>x.id),participanteNomes:attendees.map(x=>x.nome),resultado:attendees.every(x=>x.resultado==='Aprovado')?'Aprovado':'Misto',observacoes:f.get('observacoes')||'',evidenciaUrl,evidenciaPath,evidenciaNome,criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''});
-    for(const a of attendees){
-      const row=d.matrix.find(m=>m.treinamentoId===plan.id&&m.colaboradorId===a.id);
-      if(!row) continue;
-      if(a.resultado==='Aprovado') await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Concluído',eficaciaStatus:'Pendente',ultimaRealizacaoId:eventRef.id,ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});
-      else{
-        await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Pendente',eficaciaStatus:'Ineficaz',ultimaRealizacaoId:eventRef.id,ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});
-        await ensurePid({colaboradorId:a.id,colaboradorNome:a.nome,treinamentoId:plan.id,treinamentoNome:plan.titulo||'Treinamento',origemId:`${eventRef.id}:${a.id}`,motivo:'Resultado reprovado no treinamento.'});
-      }
-    }
-    await updateDoc(doc(db,'empresa_treinamentos',plan.id),{status:'Em andamento',ultimaRealizacaoData:f.get('data'),atualizadoEm:serverTimestamp()});
-    bg.remove();clearCache();toast('Realização registrada.');state.viewStep=null;renderFlow(true);
-  });
-}
-
-function renderStep5(d){
-  const root=contentEl();
-  const applicable=applicableRows(d);
-  const pending=applicable.filter(m=>norm(m.status)==='concluido'&&norm(m.eficaciaStatus)!=='eficaz');
-  root.innerHTML=`<section class="tr-section"><div class="tr-section-head"><div><h2>5. Eficácia</h2><p>Confirme se o aprendizado foi aplicado e trouxe o resultado esperado.</p></div></div>${pending.length?`<div class="tr-grid">${pending.map(m=>`<article class="tr-card"><h3>${esc(m.colaboradorNome)}</h3><p><strong>${esc(m.treinamentoNome)}</strong><br>Realização: ${dateBr(m.ultimaRealizacaoData)}</p><div class="tr-card-foot"><span class="tr-badge warn">Aguardando eficácia</span><button class="tr-btn gold" data-efficacy="${m.id}">Avaliar</button></div></article>`).join('')}</div>`:`<div class="tr-alert success"><strong>Todas as eficácias estão validadas.</strong> O fluxo principal foi concluído.</div>`}</section>`;
-  root.querySelectorAll('[data-efficacy]').forEach(b=>b.addEventListener('click',()=>showEfficacy(d.matrix.find(m=>m.id===b.dataset.efficacy))));
-  if(!pending.length){state.viewStep=6;setTimeout(()=>renderFlow(true),50)}
-}
-
-function showEfficacy(row){
-  const bg=modal('Avaliar eficácia',`${row.colaboradorNome} • ${row.treinamentoNome}`,`<form class="tr-form" data-efficacy-form><div><label>Resultado *</label><select name="resultado" required><option>Eficaz</option><option>Ineficaz</option></select></div><div><label>Data da avaliação</label><input type="date" name="data"></div><div><label>Avaliador</label><input name="avaliador"></div><div class="full"><label>Observações</label><textarea name="observacoes"></textarea></div><div class="full"><button class="tr-btn primary" type="submit">Salvar avaliação</button></div></form>`);
-  bg.querySelector('[data-efficacy-form]').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const f=new FormData(e.currentTarget);
-    const result=f.get('resultado');
-    if(result==='Eficaz') await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Concluído',eficaciaStatus:'Eficaz',eficaciaData:f.get('data')||'',eficaciaAvaliador:f.get('avaliador')||'',eficaciaObservacoes:f.get('observacoes')||'',atualizadoEm:serverTimestamp()});
-    else{
-      await updateDoc(doc(db,'empresa_matriz_competencias',row.id),{status:'Pendente',eficaciaStatus:'Ineficaz',eficaciaData:f.get('data')||'',eficaciaAvaliador:f.get('avaliador')||'',eficaciaObservacoes:f.get('observacoes')||'',atualizadoEm:serverTimestamp()});
-      await ensurePid({colaboradorId:row.colaboradorId,colaboradorNome:row.colaboradorNome,treinamentoId:row.treinamentoId,treinamentoNome:row.treinamentoNome,origemId:`eficacia:${row.id}:${f.get('data')||Date.now()}`,motivo:'Treinamento avaliado como ineficaz.'});
-    }
-    await recalcPlan(row.treinamentoId);
-    bg.remove();clearCache();toast(result==='Eficaz'?'Eficácia confirmada.':'Ineficácia registrada. O treinamento voltou para pendência e um PID foi aberto.');state.viewStep=null;renderFlow(true);
-  });
-}
-
-function renderComplete(d){
-  const root=contentEl();
-  const applicable=applicableRows(d);
-  const openPids=d.pids.filter(p=>!['concluido','fechado'].includes(norm(p.status)));
-  root.innerHTML=`<div class="tr-alert success"><strong>Fluxo principal concluído.</strong> Todos os treinamentos obrigatórios têm realização e eficácia validadas.</div><div class="tr-summary"><div class="tr-kpi"><small>Treinamentos</small><strong>${d.plans.length}</strong></div><div class="tr-kpi"><small>Funcionários</small><strong>${d.cols.length}</strong></div><div class="tr-kpi"><small>Competências</small><strong>${applicable.length}</strong></div><div class="tr-kpi"><small>Realizações</small><strong>${d.events.length}</strong></div></div><section class="tr-section" style="margin-top:14px"><div class="tr-section-head"><div><h2>Gestão contínua</h2><p>Estas ferramentas aparecem depois do fluxo principal, ou quando alguma reprovação exigir desenvolvimento.</p></div></div><div class="tr-aux-grid"><div class="tr-aux"><h3>Integração</h3><p>Acompanhe integração institucional, SGQ, técnica e avaliação de 30 dias.</p><button class="tr-btn soft" data-aux="integracao">Abrir integração</button></div><div class="tr-aux"><h3>PID</h3><p>${openPids.length?`${openPids.length} PID(s) aberto(s).`:'Planos de desenvolvimento individuais.'}</p><button class="tr-btn ${openPids.length?'gold':'soft'}" data-aux="pid">Abrir PID</button></div><div class="tr-aux"><h3>Carreira</h3><p>Registre objetivos, lacunas e evolução profissional.</p><button class="tr-btn soft" data-aux="carreira">Abrir carreira</button></div></div></section>`;
-  root.querySelectorAll('[data-aux]').forEach(b=>b.addEventListener('click',()=>renderAux(b.dataset.aux)));
-}
-
-async function renderAux(type){
-  const main=mainEl();
-  if(!main) return;
-  const map={integracao:['Integração','empresa_integracoes'],pid:['PID','empresa_pids'],carreira:['Carreira','empresa_carreiras']};
-  const [title,col]=map[type];
-  const rows=await qCompany(col);
-  main.innerHTML=`<section class="tr-root"><div class="tr-hero"><div><small>GESTÃO CONTÍNUA</small><h1>${title}</h1><p>${esc(state.empresaNome)}</p></div><div class="tr-hero-actions"><button class="tr-btn soft" data-back-flow>Voltar ao fluxo</button></div></div><section class="tr-section" style="margin-top:16px"><div class="tr-section-head"><div><h2>${title}</h2><p>Área complementar do desenvolvimento profissional.</p></div><button class="tr-btn gold" data-new-aux>Novo registro</button></div>${rows.length?`<div class="tr-table-wrap"><table class="tr-table"><thead><tr><th>Funcionário</th><th>Resumo</th><th>Status</th><th>Data/Prazo</th></tr></thead><tbody>${rows.map(r=>`<tr><td><strong>${esc(r.colaboradorNome||'-')}</strong></td><td>${esc(r.objetivo||r.origem||r.resultado30||r.cargoObjetivo||'-')}</td><td>${badge(r.status||'Em andamento')}</td><td>${dateBr(r.prazo||r.dataAvaliacao30||r.data||'')}</td></tr>`).join('')}</tbody></table></div>`:'<div class="tr-empty">Nenhum registro.</div>'}</section></section>`;
-  main.querySelector('[data-back-flow]')?.addEventListener('click',()=>{state.viewStep=6;renderFlow()});
-  main.querySelector('[data-new-aux]')?.addEventListener('click',()=>showAuxForm(type));
-}
-
-async function showAuxForm(type){
-  const d=await loadData();
-  let fields='';
-  if(type==='integracao') fields=`<div><label>Data de admissão</label><input type="date" name="data"></div><div><label>Avaliação 30 dias</label><input type="date" name="dataAvaliacao30"></div><div><label>Institucional</label><select name="institucional"><option>Pendente</option><option>Concluído</option></select></div><div><label>SGQ</label><select name="sgq"><option>Pendente</option><option>Concluído</option></select></div><div><label>Técnica</label><select name="tecnica"><option>Pendente</option><option>Concluído</option></select></div><div><label>Liberação gestor</label><select name="gestor"><option>Pendente</option><option>Concluído</option></select></div><div class="full"><label>Resultado 30 dias</label><textarea name="resultado30"></textarea></div>`;
-  if(type==='pid') fields=`<div><label>Origem</label><input name="origem"></div><div><label>Prazo</label><input type="date" name="prazo"></div><div class="full"><label>Objetivo</label><textarea name="objetivo"></textarea></div><div class="full"><label>Competências/lacunas</label><textarea name="competencias"></textarea></div><div class="full"><label>Ações</label><textarea name="acoes"></textarea></div>`;
-  if(type==='carreira') fields=`<div><label>Cargo atual</label><input name="cargoAtual"></div><div><label>Objetivo futuro</label><input name="cargoObjetivo"></div><div><label>Nível atual (1 a 4)</label><input type="number" min="1" max="4" name="nivelAtual"></div><div><label>Nível esperado (1 a 4)</label><input type="number" min="1" max="4" name="nivelEsperado"></div><div class="full"><label>Lacunas</label><textarea name="lacunas"></textarea></div><div class="full"><label>Plano de ação</label><textarea name="acoes"></textarea></div>`;
-  const bg=modal(type==='integracao'?'Nova integração':type==='pid'?'Novo PID':'Carreira e evolução','',`<form class="tr-form" data-aux-form><div><label>Funcionário *</label><select name="colaboradorId" required><option value="">Selecione</option>${d.cols.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('')}</select></div><div><label>Status</label><select name="status"><option>Em andamento</option><option>Pendente</option><option>Concluído</option></select></div>${fields}<div class="full"><button class="tr-btn primary" type="submit">Salvar</button></div></form>`);
-  bg.querySelector('[data-aux-form]').addEventListener('submit',async e=>{
-    e.preventDefault();
-    const f=new FormData(e.currentTarget);
-    const sel=e.currentTarget.elements.colaboradorId;
-    const col=type==='integracao'?'empresa_integracoes':type==='pid'?'empresa_pids':'empresa_carreiras';
-    const data={empresaId:state.empresaId,colaboradorId:f.get('colaboradorId'),colaboradorNome:sel.selectedOptions[0]?.textContent||'',status:f.get('status')||'Em andamento',criadoEm:serverTimestamp(),criadoPor:state.user?.uid||''};
-    for(const [k,v] of f.entries()) if(!['colaboradorId','status'].includes(k)) data[k]=v;
-    await addDoc(collection(db,col),data);
-    bg.remove();clearCache();toast('Registro salvo.');renderAux(type);
-  });
-}
-
-window.__EXCELLENCE_TRAINING_OPEN=openTraining;
-window.addEventListener('excellence-open-trainings',()=>openTraining());
-document.addEventListener('excellence-open-trainings',()=>openTraining());
-
-function startObserver(){
-  if(state.observerStarted) return;
-  state.observerStarted=true;
-  new MutationObserver(()=>ensureMenu()).observe(document.body,{childList:true,subtree:true});
-}
-
-onAuthStateChanged(auth,async user=>{
-  try{
-    await loadProfile(user);
-    state.empresas=[];
-    rememberCompany('','');
-    state.viewStep=null;
-    clearCache();
-    startObserver();
-    ensureMenu();
-  }catch(e){console.warn('Treinamentos:',e)}
-});
-window.addEventListener('load',()=>{injectStyle();startObserver();ensureMenu()});
-console.info(`Excellence System® Treinamentos raiz ${VERSION} carregado.`);
+window.__EXCELLENCE_TRAINING_OPEN=openTraining;window.addEventListener('excellence-open-trainings',()=>openTraining());document.addEventListener('excellence-open-trainings',()=>openTraining());
+function startObserver(){if(state.observerStarted)return;state.observerStarted=true;new MutationObserver(()=>ensureMenu()).observe(document.body,{childList:true,subtree:true})}
+onAuthStateChanged(auth,async user=>{try{await loadProfile(user);state.empresas=[];rememberCompany('','');state.viewStep=null;clearCache();startObserver();ensureMenu()}catch(e){console.warn('Treinamentos:',e)}});window.addEventListener('load',()=>{injectStyle();startObserver();ensureMenu()});console.info(`Excellence System® Treinamentos raiz ${VERSION} carregado.`);
