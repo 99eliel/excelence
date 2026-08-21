@@ -4,9 +4,8 @@ import {
   collection, query, where, getDocs, getDoc, doc, setDoc, updateDoc, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const VERSION = '20260821-88';
+const VERSION = '20260821-89';
 const COMPANY_SESSION = 'excellence-employees-company';
-const TRAINING_COMPANY_SESSION = 'excellence-training-company';
 
 const state = {
   user:null, perfil:null, empresas:[], empresaId:'', empresaNome:'', returnTo:'',
@@ -165,18 +164,18 @@ async function openEmployees(opts={}){
   if(!state.perfil&&auth.currentUser)await loadProfile(auth.currentUser);
   if(!isAdmin())return toast('O cadastro central de funcionários está disponível para o administrador.','err');
   if(!state.empresas.length)await loadCompanies();
-  if(opts.empresaId){
-    const e=state.empresas.find(x=>x.id===opts.empresaId);
-    rememberCompany(opts.empresaId,opts.empresaNome||e?.nome||'Empresa');
+  state.returnTo=opts.returnTo||'';
+
+  // No painel administrativo, Funcionários sempre começa pela escolha da empresa.
+  // Uma empresa só é aberta diretamente quando o chamador envia empresaId de forma explícita.
+  if(!opts.empresaId){
+    rememberCompany('','');
+    return renderCompanySelect();
   }
-  if(opts.returnTo)state.returnTo=opts.returnTo;
-  if(!state.empresaId){
-    try{
-      const preferred=sessionStorage.getItem(TRAINING_COMPANY_SESSION)||sessionStorage.getItem(COMPANY_SESSION)||'';
-      const e=state.empresas.find(x=>x.id===preferred);if(e)rememberCompany(e.id,e.nome||'Empresa');
-    }catch(_){}
-  }
-  if(!state.empresaId)return renderCompanySelect();
+
+  const e=state.empresas.find(x=>x.id===opts.empresaId);
+  if(!e)return toast('Empresa não encontrada.','err');
+  rememberCompany(e.id,opts.empresaNome||e.nome||'Empresa');
   await syncCompanyEmployees();
   return renderEmployees();
 }
@@ -248,7 +247,7 @@ function ensureMenu(){
     if(empresas?.parentElement===nav)empresas.insertAdjacentElement('afterend',btn);else if(usuarios?.parentElement===nav)nav.insertBefore(btn,usuarios);else nav.appendChild(btn);
   }
   if(btn.dataset.bound==='1')return;btn.dataset.bound='1';
-  btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();state.returnTo='';openEmployees()},true);
+  btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openEmployees()},true);
 }
 function startObserver(){
   if(state.observerStarted)return;state.observerStarted=true;
@@ -259,9 +258,7 @@ document.addEventListener('click',e=>{
   const b=e.target.closest?.('.tr-main-nav [data-screen="employees"]');
   if(!b||!isAdmin())return;
   e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
-  let id='';try{id=sessionStorage.getItem(TRAINING_COMPANY_SESSION)||''}catch(_){}
-  const company=state.empresas.find(x=>x.id===id);
-  openEmployees({empresaId:id,empresaNome:company?.nome||'',returnTo:'trainings'});
+  openEmployees({returnTo:'trainings'});
 },true);
 
 window.__EXCELLENCE_EMPLOYEES_OPEN=openEmployees;
