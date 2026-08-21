@@ -1,7 +1,7 @@
 {
-  "version": "20260821-91",
+  "version": "20260821-92",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Treinamentos simplificado com apenas Carreira na gestão contínua.",
-  "notes": "Na área de Treinamentos foram removidos os atalhos manuais de Integração e PID da gestão contínua, permanecendo somente Carreira e Evolução. O PID automático continua funcionando internamente quando houver reprovação ou ineficácia e continua disponível nos relatórios de auditoria, sem ocupar uma área manual no fluxo principal de Treinamentos."
+  "message": "Relatórios de Treinamentos reorganizados em visão gerencial.",
+  "notes": "A área de relatórios de Treinamentos recebeu uma nova camada gerencial com cabeçalho profissional, filtros destacados, resumo executivo, indicadores de conclusão, eficácia, pendências e evidências, além de visão rápida por treinamento. A impressão foi refeita em A4 paisagem com layout compacto, cabeçalho institucional, filtros, tabelas densas, assinaturas e rodapé, mantendo os tipos de relatório já existentes e o dossiê de auditoria."
 }
