@@ -1,7 +1,7 @@
 {
-  "version": "20260821-82",
+  "version": "20260821-83",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Fluxo integrado de Treinamentos ativado.",
-  "notes": "Plano anual, matriz de competências, realizações, avaliação de eficácia, integração e PID agora trabalham em fluxo conectado. É possível definir o público obrigatório de cada treinamento e gerar a matriz automaticamente. Ao registrar uma realização, a matriz dos participantes é atualizada. A eficácia pode ser avaliada depois; quando eficaz, a competência é concluída, e quando ineficaz ou reprovada o sistema reabre a pendência e gera um PID automático. A avaliação de 30 dias da integração também pode gerar PID quando houver necessidade de desenvolvimento."
+  "message": "Treinamentos ganhou fluxo guiado e mais intuitivo.",
+  "notes": "A área de Treinamentos agora orienta o usuário passo a passo: primeiro cadastrar treinamentos, depois funcionários, definir público e gerar matriz, registrar realizações, avaliar eficácia e acompanhar desenvolvimento. A tela mostra progresso da configuração inicial, próximo passo recomendado, indicadores por etapa e navegação reorganizada com linguagem mais simples."
 }
