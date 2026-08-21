@@ -1,7 +1,7 @@
 {
-  "version": "20260820-80",
+  "version": "20260820-81",
   "name": "Excellence System®",
   "updatedAt": "2026-08-20",
-  "message": "Treinamentos garantido no menu administrativo.",
-  "notes": "A entrada de Treinamentos foi reforçada no menu lateral do painel administrativo e ganhou carregamento independente do controlador anterior. Ao clicar, o sistema carrega o módulo e tenta abrir diretamente sua visão principal."
+  "message": "Módulo de Treinamentos reconstruído com abertura direta.",
+  "notes": "O carregador empacotado das versões anteriores foi retirado da entrada principal. A área Treinamentos agora é um módulo JavaScript direto e legível, com seleção de empresa, visão geral, plano anual, matriz de competências, realizações, colaboradores, integração, PID e carreira. Também permite importar colaboradores do Apontamento e anexar evidências nas realizações."
 }
