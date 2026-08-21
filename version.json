@@ -1,7 +1,7 @@
 {
-  "version": "20260821-89",
+  "version": "20260821-90",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Funcionários agora sempre inicia pela escolha da empresa.",
-  "notes": "Ao abrir a área central de Funcionários no painel administrativo, o sistema não reutiliza mais automaticamente a última empresa acessada. A tela sempre começa pela seleção da empresa. O mesmo comportamento foi aplicado ao acesso de Funcionários vindo de Treinamentos; somente chamadas internas que informem uma empresa de forma explícita podem abrir a base diretamente."
+  "message": "Valores financeiros do Apontamento restritos aos relatórios do administrador geral.",
+  "notes": "A tela operacional de lançamento não exibe mais valores financeiros: o seletor de processo não mostra preço, o resumo do lançamento não mostra valor e o histórico operacional remove valor total e valor por hora. Os indicadores gerais fora dos relatórios também não mostram valor. Nos relatórios, valores, coluna financeira e totais monetários permanecem visíveis somente para o perfil administrador geral; usuários da empresa recebem o mesmo relatório operacional sem informações financeiras. A impressão segue a mesma regra."
 }
