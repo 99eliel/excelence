@@ -1,7 +1,7 @@
 {
-  "version": "20260821-90",
+  "version": "20260821-91",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Valores financeiros do Apontamento restritos aos relatórios do administrador geral.",
-  "notes": "A tela operacional de lançamento não exibe mais valores financeiros: o seletor de processo não mostra preço, o resumo do lançamento não mostra valor e o histórico operacional remove valor total e valor por hora. Os indicadores gerais fora dos relatórios também não mostram valor. Nos relatórios, valores, coluna financeira e totais monetários permanecem visíveis somente para o perfil administrador geral; usuários da empresa recebem o mesmo relatório operacional sem informações financeiras. A impressão segue a mesma regra."
+  "message": "Treinamentos simplificado com apenas Carreira na gestão contínua.",
+  "notes": "Na área de Treinamentos foram removidos os atalhos manuais de Integração e PID da gestão contínua, permanecendo somente Carreira e Evolução. O PID automático continua funcionando internamente quando houver reprovação ou ineficácia e continua disponível nos relatórios de auditoria, sem ocupar uma área manual no fluxo principal de Treinamentos."
 }
