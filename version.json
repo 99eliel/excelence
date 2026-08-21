@@ -1,7 +1,7 @@
 {
-  "version": "20260821-86",
+  "version": "20260821-87",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Treinamentos ganhou resultados, relatórios, evidências e dossiê de auditoria.",
-  "notes": "Após a conclusão da eficácia, o fluxo libera a etapa 6 Resultados. Nela há relatório geral, relatório por treinamento, dossiê por funcionário, matriz de competências, pendências e atrasados, relatório de eficácia, central de evidências e dossiê de auditoria. Todos possuem filtros por período, treinamento, funcionário, setor e status, além de impressão/Salvar PDF. Integração, PID e carreira permanecem disponíveis como gestão contínua abaixo dos resultados."
+  "message": "Treinamentos reorganizados em cards independentes com relatorios gerais separados.",
+  "notes": "Cada treinamento agora possui seu proprio card e avanca de forma independente pelas fases de publico, realizacao e eficacia, sem ser bloqueado por outros treinamentos em aberto. Funcionarios continuam em cadastro compartilhado. A area Relatorios foi separada do fluxo e permite escolher um treinamento especifico ou todos, selecionar o tipo de relatorio, aplicar filtros e imprimir ou salvar em PDF. Integracao, PID e carreira permanecem em Gestao continua."
 }
