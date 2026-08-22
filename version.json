@@ -1,7 +1,7 @@
 {
-  "version": "20260821-92",
+  "version": "20260821-93",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Relatórios de Treinamentos reorganizados em visão gerencial.",
-  "notes": "A área de relatórios de Treinamentos recebeu uma nova camada gerencial com cabeçalho profissional, filtros destacados, resumo executivo, indicadores de conclusão, eficácia, pendências e evidências, além de visão rápida por treinamento. A impressão foi refeita em A4 paisagem com layout compacto, cabeçalho institucional, filtros, tabelas densas, assinaturas e rodapé, mantendo os tipos de relatório já existentes e o dossiê de auditoria."
+  "message": "Relatórios de Treinamentos personalizados no padrão visual do sistema.",
+  "notes": "Os relatórios de Treinamentos agora seguem o padrão visual gerencial do Excellence System®, com cabeçalho institucional com logomarca, faixa temática, filtros destacados, resumo executivo, indicadores de conclusão, eficácia, pendências e evidências, panorama por treinamento, tabelas mais organizadas, assinaturas e rodapé institucional. A impressão em A4 paisagem foi refeita para ficar mais próxima do padrão usado nos relatórios de Apontamento, mantendo todos os tipos de relatório existentes."
 }
