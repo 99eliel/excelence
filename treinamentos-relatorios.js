@@ -1,8 +1,426 @@
-(function(){const V='20260821-92';const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>Array.from(r.querySelectorAll(s));const txt=e=>String(e?.textContent||'').replace(/\s+/g,' ').trim();const norm=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const esc=(v='')=>String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');const n=v=>{const x=Number(String(v??'').replace(/\./g,'').replace(',','.').replace(/[^0-9.-]/g,''));return Number.isFinite(x)?x:0};const names={geral:'Relatório geral de treinamentos',treinamento:'Relatório do treinamento',funcionario:'Dossiê por funcionário',matriz:'Matriz de competências',pendencias:'Pendências e atrasados',eficacia:'Relatório de eficácia',evidencias:'Evidências de treinamentos',auditoria:'Dossiê de auditoria'};
-function css(){if($('#tr92-style'))return;const s=document.createElement('style');s.id='tr92-style';s.textContent=`.tr-report-preview.tr92{padding:0;overflow:hidden}.tr92-head{background:linear-gradient(135deg,#073F5A,#0b607f);color:#fff;padding:18px;display:flex;justify-content:space-between;gap:16px}.tr92-head small{font-size:10px;font-weight:900;color:#bcd8e3;letter-spacing:.07em}.tr92-head h2{margin:4px 0!important;color:#fff!important;font-size:23px!important}.tr92-head p{margin:0;color:#dcecf2}.tr92-head-right{text-align:right;font-size:12px}.tr92-filters{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;background:#dce8ed;gap:1px}.tr92-filter{background:#f8fbfc;padding:8px 10px;min-width:0}.tr92-filter small{display:block;font-size:9px;font-weight:900;color:#607788;text-transform:uppercase}.tr92-filter strong{display:block;margin-top:2px;color:#073F5A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tr92-exec{padding:15px 18px 4px}.tr92-exec h3{margin:0 0 9px!important;color:#073F5A!important}.tr92-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.tr92-kpi{border:1px solid #dce8ed;border-radius:12px;padding:10px;background:#fbfdfe}.tr92-kpi small{display:block;font-size:9px;font-weight:900;color:#607788;text-transform:uppercase}.tr92-kpi strong{display:block;font-size:21px;color:#073F5A}.tr92-kpi.good strong{color:#247043}.tr92-kpi.warn strong{color:#92670e}.tr92-bars{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}.tr92-bar{border:1px solid #dce8ed;border-radius:10px;padding:9px}.tr92-bar-top{display:flex;justify-content:space-between;font-size:11px;font-weight:850;margin-bottom:6px}.tr92-track{height:8px;background:#e7eef1;border-radius:999px;overflow:hidden}.tr92-track i{display:block;height:100%;background:#0b6f93}.tr92-bar.good .tr92-track i{background:#3d9a61}.tr92-summary{padding:8px 18px 16px}.tr92-summary h3{margin:0 0 8px!important;color:#073F5A!important}.tr92-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tr92-item{border:1px solid #dbe7eb;border-radius:11px;padding:9px}.tr92-item-top{display:flex;justify-content:space-between;gap:8px}.tr92-item small{color:#607788}.tr92-mini{height:5px;background:#e7eef1;border-radius:999px;overflow:hidden;margin-top:6px}.tr92-mini i{display:block;height:100%;background:#3d9a61}.tr92 .tr-report-kpis{display:none!important}.tr92>.tr-report-title,.tr92>.tr-report-block,.tr92>.tr-table-wrap,.tr92>.tr-evidence-list,.tr92>.tr-audit-cover,.tr92>.tr-report-note{margin-left:18px!important;margin-right:18px!important}.tr92>.tr-report-title{margin-top:13px!important}@media(max-width:800px){.tr92-kpis{grid-template-columns:repeat(3,1fr)}.tr92-filters,.tr92-bars,.tr92-summary-grid{grid-template-columns:1fr 1fr}}`;document.head.appendChild(s)}
-function sel(s,f='Todos'){const e=$(s);if(!e)return f;if(e.tagName==='SELECT')return txt(e.selectedOptions?.[0])||f;return String(e.value||'').trim()||f}function br(v){if(!/^\d{4}-\d{2}-\d{2}$/.test(v||''))return v||'';const[y,m,d]=v.split('-');return`${d}/${m}/${y}`}function context(){const a=br($('[data-r-from]')?.value||''),b=br($('[data-r-to]')?.value||'');return{company:txt($('.tr-hero h1'))||'Empresa',type:$('[data-r-type]')?.value||'geral',training:sel('[data-r-training]','Todos os treinamentos'),period:a||b?`${a||'início'} até ${b||'hoje'}`:'Todo o período',employee:sel('[data-r-employee]'),sector:sel('[data-r-sector]'),status:sel('[data-r-status]')}}
-function validRows(t){return t?$$('tbody tr',t).filter(r=>{const x=norm(txt(r));return $$('td',r).length&&!x.includes('sem dados')&&!x.includes('nenhum')}):[]}function stats(preview,type){const o={trainings:0,total:0,done:0,eff:0,pending:0,evidence:$$('.tr-evidence',preview).length,late:0,rows:[]};const k={};$$('.tr-report-kpi',preview).forEach(c=>k[norm(txt($('small',c)))]=n(txt($('strong',c))));if(type==='geral'){const rr=validRows($('.tr-report-block .tr-table',preview));o.trainings=rr.length;rr.forEach(r=>{const c=$$('td',r);if(c.length<7)return;const x={name:txt(c[0]),stage:txt(c[1]),date:txt(c[2]),total:n(txt(c[3])),done:n(txt(c[4])),eff:n(txt(c[5])),pending:n(txt(c[6]))};o.rows.push(x);o.total+=x.total;o.done+=x.done;o.eff+=x.eff;o.pending+=x.pending});o.evidence=k.evidencias||o.evidence;return o}if(type==='treinamento'){const rr=$$('.tr-report-block .tr-table',preview).flatMap(validRows);o.trainings=$$('.tr-report-block',preview).length;o.total=rr.length;rr.forEach(r=>{const c=$$('td',r);if(norm(txt(c[2])).includes('concluido'))o.done++;const e=norm(txt(c[4]));if(e.includes('eficaz')&&!e.includes('ineficaz'))o.eff++});o.pending=Math.max(0,o.total-o.done);return o}if(type==='funcionario'){const rr=$$('.tr-report-block .tr-table',preview).flatMap(validRows),set=new Set();o.total=rr.length;rr.forEach(r=>{const c=$$('td',r);set.add(txt(c[0]));if(norm(txt(c[1])).includes('concluido'))o.done++;const e=norm(txt(c[3]));if(e.includes('eficaz')&&!e.includes('ineficaz'))o.eff++});o.trainings=set.size;o.pending=Math.max(0,o.total-o.done);return o}if(type==='pendencias'){const rr=validRows($('.tr-table',preview));o.total=o.pending=rr.length;o.late=rr.filter(r=>norm(txt(r)).includes('atrasado')).length;o.trainings=new Set(rr.map(r=>txt($$('td',r)[1]))).size;return o}if(type==='eficacia'){const rr=validRows($('.tr-table',preview));o.total=rr.length;o.trainings=new Set(rr.map(r=>txt($$('td',r)[1]))).size;rr.forEach(r=>{const e=norm(txt($$('td',r)[3]));if(e.includes('eficaz')&&!e.includes('ineficaz'))o.eff++;if(e.includes('ineficaz'))o.pending++});o.done=o.eff;return o}if(type==='matriz'){const t=$('.tr-table',preview),rr=validRows(t);o.trainings=Math.max(0,$$('thead th',t).length-1);rr.forEach(r=>$$('td',r).slice(1).forEach(c=>{const x=norm(txt(c));if(!x||x==='—'||x==='-')return;o.total++;if(x.includes('concluido'))o.done++;if(x.includes('eficaz')&&!x.includes('ineficaz'))o.eff++}));o.pending=Math.max(0,o.total-o.done);return o}if(type==='evidencias'){o.trainings=new Set($$('.tr-evidence strong',preview).map(txt)).size;return o}if(type==='auditoria'){o.trainings=k.treinamentos||0;o.total=k.competencias||0;o.done=k.concluidas||0;o.eff=k.eficazes||0;o.evidence=k.evidencias||o.evidence;o.pending=Math.max(0,o.total-o.done);return o}return o}
-const rate=(a,b)=>b?Math.round(a/b*100):0;const card=(l,v,c='')=>`<div class="tr92-kpi ${c}"><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`;function exec(s,type){const a=rate(s.done,s.total),b=rate(s.eff,s.total),cards=[card('Treinamentos',s.trainings)];if(type!=='evidencias')cards.push(card(type==='pendencias'?'Pendências':'Público / competências',s.total));if(!['pendencias','evidencias'].includes(type)){cards.push(card('Concluídos',s.done,'good'));cards.push(card('Eficazes',s.eff,'good'))}if(type!=='evidencias')cards.push(card(type==='pendencias'?'Atrasados':'Pendências',type==='pendencias'?s.late:s.pending,(s.pending||s.late)?'warn':''));cards.push(card('Evidências',s.evidence));const bars=s.total&&!['pendencias','evidencias'].includes(type)?`<div class="tr92-bars"><div class="tr92-bar"><div class="tr92-bar-top"><span>Conclusão do público</span><strong>${a}%</strong></div><div class="tr92-track"><i style="width:${a}%"></i></div></div><div class="tr92-bar good"><div class="tr92-bar-top"><span>Eficácia validada</span><strong>${b}%</strong></div><div class="tr92-track"><i style="width:${b}%"></i></div></div></div>`:'';return`<section class="tr92-exec"><h3>Resumo executivo</h3><div class="tr92-kpis">${cards.join('')}</div>${bars}</section>`}function summary(rr){if(!rr.length)return'';return`<section class="tr92-summary"><h3>Situação por treinamento</h3><div class="tr92-summary-grid">${rr.map(x=>`<div class="tr92-item"><div class="tr92-item-top"><strong>${esc(x.name)}</strong><small>${esc(x.stage)}</small></div><small>Previsão ${esc(x.date)} • ${x.done}/${x.total} concluídos • ${x.eff} eficazes</small><div class="tr92-mini"><i style="width:${rate(x.done,x.total)}%"></i></div></div>`).join('')}</div></section>`}function filters(c){return`<div class="tr92-filters">${[['Treinamento',c.training],['Período',c.period],['Funcionário',c.employee],['Setor',c.sector],['Status',c.status]].map(([l,v])=>`<div class="tr92-filter"><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`).join('')}</div>`}
-function enhance(p){if(!p||p.dataset.v92==='1')return;p.dataset.v92='1';p.classList.add('tr92');const c=context(),s=stats(p,c.type),w=document.createElement('div');w.innerHTML=`<div class="tr92-head"><div><small>EXCELLENCE SYSTEM® • TREINAMENTOS</small><h2>${esc(names[c.type]||'Relatório')}</h2><p>${esc(c.company)}</p></div><div class="tr92-head-right"><strong>${esc(c.training)}</strong><br><span>${new Date().toLocaleString('pt-BR')}</span></div></div>${filters(c)}${exec(s,c.type)}${c.type==='geral'?summary(s.rows):''}`;Array.from(w.children).reverse().forEach(x=>p.prepend(x))}
-function print(p){enhance(p);const c=context(),clone=p.cloneNode(true);$('.tr92-head',clone)?.remove();$('.tr92-filters',clone)?.remove();$$('button,.tr-btn',clone).forEach(e=>e.remove());const frame=document.createElement('iframe');frame.style.cssText='position:fixed;width:0;height:0;border:0';document.body.appendChild(frame);const d=frame.contentDocument,w=frame.contentWindow;d.open();d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(names[c.type]||'Relatório')}</title><style>@page{size:A4 landscape;margin:7mm 6mm 9mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#173846;font-size:7px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.h{display:flex;justify-content:space-between;border-bottom:2px solid #073F5A;padding-bottom:5px}.h h1{margin:0;color:#073F5A;font-size:14px}.h small{color:#607788}.title{background:#073F5A;color:#fff;padding:5px 7px;border-radius:5px;margin:5px 0}.title h2{margin:0;font-size:10px}.f{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:3px;margin-bottom:5px}.f div{border:1px solid #d7e3e8;padding:3px 5px;border-radius:4px}.f small{display:block;font-size:4.5px;color:#607788;text-transform:uppercase}.f strong{font-size:6px}.tr92-exec{padding:0 0 4px}.tr92-exec h3{margin:0 0 3px;font-size:8px}.tr92-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}.tr92-kpi{border:1px solid #d8e4e8;padding:3px 5px;border-radius:4px}.tr92-kpi small{display:block;font-size:4.4px;color:#607788}.tr92-kpi strong{font-size:9px;color:#073F5A}.tr92-bars{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}.tr92-bar{border:1px solid #d8e4e8;padding:3px}.tr92-bar-top{display:flex;justify-content:space-between;font-size:4.8px}.tr92-track,.tr92-mini{height:4px;background:#e7eef1}.tr92-track i,.tr92-mini i{display:block;height:100%;background:#3d9a61}.tr92-summary{padding:2px 0 4px}.tr92-summary h3{font-size:8px;margin:0 0 3px}.tr92-summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px}.tr92-item{border:1px solid #dbe7eb;padding:3px}.tr92-item-top{display:flex;justify-content:space-between;font-size:5px}.tr92-item small{font-size:4.5px}.tr-report-kpis{display:none!important}.tr-report-title{display:flex;justify-content:space-between;border-bottom:1px solid #073F5A;margin:4px 0;padding-bottom:3px}.tr-report-title h2{font-size:8px;margin:0}.tr-report-title p,.tr-report-note{font-size:5px}.tr-report-block{margin-top:5px}.tr-report-block h3{font-size:7px;margin:0 0 3px}.tr-table{width:100%;border-collapse:collapse;min-width:0!important;font-size:5.2px}.tr-table th,.tr-table td{border:1px solid #d8e3e7;padding:2px 3px;text-align:left}.tr-table th{background:#eef4f6;font-size:4.8px}.tr-table thead{display:table-header-group}.tr-table tr{break-inside:avoid}.tr-badge{font-size:4.4px;border:1px solid #c5d7de;border-radius:999px;padding:1px 3px}.tr-evidence-list{display:grid;grid-template-columns:1fr 1fr;gap:3px}.tr-evidence{border:1px solid #dce8ed;padding:3px}.sign{display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-top:9px}.sign div{border-top:1px solid #789;text-align:center;padding-top:3px;font-size:5px;color:#607788}</style></head><body><div class="h"><div><h1>Excellence System®</h1><small>MP Consultoria • Gestão da Qualidade</small></div><div><strong>${esc(c.company)}</strong><br><small>${new Date().toLocaleString('pt-BR')} • ${V}</small></div></div><div class="title"><h2>${esc(names[c.type]||'Relatório')}</h2></div><div class="f">${[['Treinamento',c.training],['Período',c.period],['Funcionário',c.employee],['Setor',c.sector],['Status',c.status]].map(([l,v])=>`<div><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`).join('')}</div>${clone.innerHTML}<div class="sign"><div>Responsável pelo treinamento / RH</div><div>Responsável pela empresa</div></div></body></html>`);d.close();setTimeout(()=>{w.focus();w.print();setTimeout(()=>frame.remove(),900)},250)}
-function run(){requestAnimationFrame(()=>{css();enhance($('[data-report-preview]'))})}document.addEventListener('click',e=>{const b=e.target.closest?.('[data-r-print]');if(!b||!b.closest('.tr-root'))return;const p=$('[data-report-preview]');if(!p)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();print(p)},true);new MutationObserver(run).observe(document.body,{childList:true,subtree:true});window.addEventListener('load',run);run();console.info(`Excellence System® relatórios de Treinamentos ${V} carregados.`)})();
+(function () {
+  const V = '20260821-93';
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const text = (el) => String(el?.textContent || '').replace(/\s+/g, ' ').trim();
+  const norm = (v = '') => String(v || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const esc = (v = '') => String(v ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+
+  const REPORT_NAMES = {
+    geral: 'Relatório geral de treinamentos',
+    treinamento: 'Relatório do treinamento',
+    funcionario: 'Dossiê por funcionário',
+    matriz: 'Matriz de competências',
+    pendencias: 'Pendências e atrasados',
+    eficacia: 'Relatório de eficácia',
+    evidencias: 'Evidências de treinamentos',
+    auditoria: 'Dossiê de auditoria'
+  };
+
+  function num(v) {
+    const raw = String(v ?? '').trim().replace(/\./g, '').replace(',', '.').replace(/[^0-9.-]/g, '');
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function percent(a, b) {
+    return b ? Math.round((a / b) * 100) : 0;
+  }
+
+  function dateInput(v = '') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return v || '';
+    const [y, m, d] = v.split('-');
+    return `${d}/${m}/${y}`;
+  }
+
+  function selected(selector, fallback = 'Todos') {
+    const el = $(selector);
+    if (!el) return fallback;
+    if (el.tagName === 'SELECT') return text(el.selectedOptions?.[0]) || fallback;
+    return String(el.value || '').trim() || fallback;
+  }
+
+  function context() {
+    const from = dateInput($('[data-r-from]')?.value || '');
+    const to = dateInput($('[data-r-to]')?.value || '');
+    const type = $('[data-r-type]')?.value || 'geral';
+    return {
+      company: text($('.tr-hero h1')) || 'Empresa',
+      type,
+      typeName: REPORT_NAMES[type] || 'Relatório de treinamentos',
+      training: selected('[data-r-training]', 'Todos os treinamentos'),
+      employee: selected('[data-r-employee]', 'Todos'),
+      sector: selected('[data-r-sector]', 'Todos'),
+      status: selected('[data-r-status]', 'Todos'),
+      period: from || to ? `${from || 'Início'} até ${to || 'Hoje'}` : 'Todo o período'
+    };
+  }
+
+  function validRows(table) {
+    if (!table) return [];
+    return $$('tbody tr', table).filter((row) => {
+      const t = norm(text(row));
+      return $$('td', row).length &&
+        !t.includes('sem dados') &&
+        !t.includes('nenhum') &&
+        !t.includes('publico ainda nao definido');
+    });
+  }
+
+  function collect(preview, type) {
+    const out = {
+      trainings: 0,
+      total: 0,
+      completed: 0,
+      effective: 0,
+      pending: 0,
+      evidence: $$('.tr-evidence', preview).length,
+      late: 0,
+      trainingRows: []
+    };
+
+    const legacy = {};
+    $$('.tr-report-kpi', preview).forEach((card) => {
+      legacy[norm(text($('small', card)))] = num(text($('strong', card)));
+    });
+
+    if (type === 'geral') {
+      const rows = validRows($('.tr-report-block .tr-table', preview));
+      out.trainings = rows.length;
+      rows.forEach((row) => {
+        const c = $$('td', row);
+        if (c.length < 7) return;
+        const item = {
+          name: text(c[0]),
+          stage: text(c[1]),
+          date: text(c[2]),
+          total: num(text(c[3])),
+          completed: num(text(c[4])),
+          effective: num(text(c[5])),
+          pending: num(text(c[6]))
+        };
+        out.trainingRows.push(item);
+        out.total += item.total;
+        out.completed += item.completed;
+        out.effective += item.effective;
+        out.pending += item.pending;
+      });
+      out.evidence = legacy.evidencias || out.evidence;
+      return out;
+    }
+
+    if (type === 'treinamento') {
+      const blocks = $$('.tr-report-block', preview);
+      out.trainings = blocks.length;
+      blocks.forEach((block) => {
+        const rows = validRows($('.tr-table', block));
+        const item = {
+          name: text($('h3', block)) || 'Treinamento',
+          stage: 'Treinamento',
+          date: '-',
+          total: rows.length,
+          completed: 0,
+          effective: 0,
+          pending: 0
+        };
+        rows.forEach((row) => {
+          const c = $$('td', row);
+          const st = norm(text(c[2]));
+          const ef = norm(text(c[4]));
+          if (st.includes('concluido')) item.completed++;
+          if (ef.includes('eficaz') && !ef.includes('ineficaz')) item.effective++;
+        });
+        item.pending = Math.max(0, item.total - item.completed);
+        out.trainingRows.push(item);
+        out.total += item.total;
+        out.completed += item.completed;
+        out.effective += item.effective;
+        out.pending += item.pending;
+      });
+      return out;
+    }
+
+    if (type === 'funcionario') {
+      const set = new Set();
+      $$('.tr-report-block .tr-table', preview).flatMap(validRows).forEach((row) => {
+        const c = $$('td', row);
+        out.total++;
+        set.add(text(c[0]));
+        if (norm(text(c[1])).includes('concluido')) out.completed++;
+        const ef = norm(text(c[3]));
+        if (ef.includes('eficaz') && !ef.includes('ineficaz')) out.effective++;
+      });
+      out.trainings = set.size;
+      out.pending = Math.max(0, out.total - out.completed);
+      return out;
+    }
+
+    if (type === 'pendencias') {
+      const rows = validRows($('.tr-table', preview));
+      out.total = out.pending = rows.length;
+      out.late = rows.filter((r) => norm(text(r)).includes('atrasado')).length;
+      out.trainings = new Set(rows.map((r) => text($$('td', r)[1]))).size;
+      return out;
+    }
+
+    if (type === 'eficacia') {
+      const rows = validRows($('.tr-table', preview));
+      out.total = rows.length;
+      out.trainings = new Set(rows.map((r) => text($$('td', r)[1]))).size;
+      rows.forEach((row) => {
+        const ef = norm(text($$('td', row)[3]));
+        if (ef.includes('eficaz') && !ef.includes('ineficaz')) out.effective++;
+        if (ef.includes('ineficaz')) out.pending++;
+      });
+      out.completed = out.effective;
+      return out;
+    }
+
+    if (type === 'matriz') {
+      const table = $('.tr-table', preview);
+      out.trainings = Math.max(0, $$('thead th', table).length - 1);
+      validRows(table).forEach((row) => {
+        $$('td', row).slice(1).forEach((cell) => {
+          const v = norm(text(cell));
+          if (!v || v === '—' || v === '-') return;
+          out.total++;
+          if (v.includes('concluido')) out.completed++;
+          if (v.includes('eficaz') && !v.includes('ineficaz')) out.effective++;
+        });
+      });
+      out.pending = Math.max(0, out.total - out.completed);
+      return out;
+    }
+
+    if (type === 'evidencias') {
+      out.trainings = new Set($$('.tr-evidence strong', preview).map(text)).size;
+      return out;
+    }
+
+    if (type === 'auditoria') {
+      out.trainings = legacy.treinamentos || 0;
+      out.total = legacy.competencias || 0;
+      out.completed = legacy.concluidas || 0;
+      out.effective = legacy.eficazes || 0;
+      out.evidence = legacy.evidencias || out.evidence;
+      out.pending = Math.max(0, out.total - out.completed);
+      return out;
+    }
+
+    return out;
+  }
+
+  function injectCss() {
+    if ($('#tr93-style')) return;
+    const style = document.createElement('style');
+    style.id = 'tr93-style';
+    style.textContent = `
+      .tr-report-preview.tr93{padding:0!important;overflow:hidden!important;background:#f4f8fa!important;border:0!important;border-radius:20px!important}
+      .tr93-head{background:linear-gradient(135deg,#073F5A,#0B607F);color:#fff;padding:20px 22px;display:flex;justify-content:space-between;gap:18px;align-items:flex-start}
+      .tr93-brand{display:flex;gap:12px;align-items:center}.tr93-logo{width:50px;height:50px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}
+      .tr93-head small{display:block;color:#bfdae4;font-size:10px;font-weight:900;letter-spacing:.08em}.tr93-head h2{margin:4px 0!important;color:#fff!important;font-size:24px!important}.tr93-head p{margin:0;color:#deedf2}
+      .tr93-meta{text-align:right;background:rgba(255,255,255,.11);border:1px solid rgba(255,255,255,.2);padding:10px 12px;border-radius:12px}.tr93-meta strong{display:block}.tr93-meta span{font-size:11px;color:#d7e9ef}
+      .tr93-filters{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;background:#dbe8ed;gap:1px}.tr93-filter{background:#f8fbfc;padding:9px 11px;min-width:0}.tr93-filter small{display:block;font-size:9px;color:#607788;text-transform:uppercase;font-weight:900}.tr93-filter strong{display:block;margin-top:3px;color:#073F5A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .tr93-exec{padding:16px 18px 9px}.tr93-section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}.tr93-section-title h3{margin:0!important;color:#073F5A!important;font-size:18px!important}.tr93-section-title span{font-size:11px;color:#607788}
+      .tr93-kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.tr93-kpi{background:#fff;border:1px solid #d8e5e9;border-radius:12px;padding:10px}.tr93-kpi small{display:block;color:#607788;font-size:9px;text-transform:uppercase;font-weight:900}.tr93-kpi strong{display:block;color:#073F5A;font-size:22px;margin-top:2px}.tr93-kpi.good strong{color:#2d7c4d}.tr93-kpi.warn strong{color:#9a6b0a}
+      .tr93-bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.tr93-bar{background:#fff;border:1px solid #d8e5e9;border-radius:11px;padding:9px}.tr93-bar-top{display:flex;justify-content:space-between;font-size:11px;font-weight:850;margin-bottom:5px}.tr93-track{height:7px;border-radius:999px;overflow:hidden;background:#e8eff2}.tr93-track i{display:block;height:100%;background:linear-gradient(90deg,#0B607F,#16A0CE)}.tr93-bar.good .tr93-track i{background:linear-gradient(90deg,#3b965f,#59b978)}
+      .tr93-overview{padding:0 18px 12px}.tr93-overview h3{margin:0 0 8px!important;color:#073F5A!important}.tr93-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tr93-card{background:#fff;border:1px solid #d8e5e9;border-radius:12px;padding:10px}.tr93-card-top{display:flex;justify-content:space-between;gap:8px}.tr93-card-top strong{color:#073F5A}.tr93-card small{color:#607788}.tr93-mini{height:5px;background:#e8eff2;border-radius:999px;overflow:hidden;margin-top:6px}.tr93-mini i{display:block;height:100%;background:#3b965f}
+      .tr93 .tr-report-kpis{display:none!important}.tr93>.tr-report-title{display:none!important}.tr93>.tr-report-block,.tr93>.tr-table-wrap,.tr93>.tr-evidence-list,.tr93>.tr-audit-cover,.tr93>.tr-report-note{margin-left:18px!important;margin-right:18px!important}
+      .tr93 .tr-report-block{background:#fff;border:1px solid #d8e5e9;border-radius:13px;padding:12px;margin-top:8px}.tr93 .tr-report-block h3{color:#073F5A!important}.tr93 .tr-table{border:1px solid #d8e5e9;border-radius:10px;overflow:hidden}.tr93 .tr-table th{background:#edf4f7!important}.tr93 .tr-table tbody tr:nth-child(even){background:#fbfdfe}
+      .tr93-footer{display:flex;justify-content:space-between;gap:15px;margin:14px 18px 0;padding:11px 0 16px;border-top:1px solid #d8e5e9;color:#607788;font-size:11px}.tr93-footer strong{color:#073F5A}
+      @media(max-width:900px){.tr93-kpis{grid-template-columns:repeat(3,1fr)}.tr93-filters,.tr93-bars,.tr93-grid{grid-template-columns:1fr 1fr}}
+      @media(max-width:650px){.tr93-head{flex-direction:column}.tr93-meta{text-align:left;width:100%}.tr93-kpis,.tr93-filters,.tr93-bars,.tr93-grid{grid-template-columns:1fr}}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function logoUrl() {
+    try { return new URL('logo.png', window.location.href).href; }
+    catch (_) { return 'logo.png'; }
+  }
+
+  function kpi(label, value, cls = '') {
+    return `<div class="tr93-kpi ${cls}"><small>${esc(label)}</small><strong>${esc(value)}</strong></div>`;
+  }
+
+  function executive(stats, ctx) {
+    const completion = percent(stats.completed, stats.total);
+    const efficacy = percent(stats.effective, stats.total);
+    const cards = [kpi('Treinamentos', stats.trainings)];
+
+    if (ctx.type !== 'evidencias') cards.push(kpi(ctx.type === 'pendencias' ? 'Pendências' : 'Público obrigatório', stats.total));
+    if (!['pendencias', 'evidencias'].includes(ctx.type)) {
+      cards.push(kpi('Concluídos', stats.completed, 'good'));
+      cards.push(kpi('Eficazes', stats.effective, 'good'));
+    }
+    if (ctx.type !== 'evidencias') {
+      cards.push(kpi(ctx.type === 'pendencias' ? 'Atrasados' : 'Pendências', ctx.type === 'pendencias' ? stats.late : stats.pending, (stats.pending || stats.late) ? 'warn' : ''));
+    }
+    cards.push(kpi('Evidências', stats.evidence));
+
+    const bars = stats.total && !['pendencias', 'evidencias'].includes(ctx.type)
+      ? `<div class="tr93-bars">
+           <div class="tr93-bar"><div class="tr93-bar-top"><span>Conclusão do público</span><strong>${completion}%</strong></div><div class="tr93-track"><i style="width:${completion}%"></i></div></div>
+           <div class="tr93-bar good"><div class="tr93-bar-top"><span>Eficácia validada</span><strong>${efficacy}%</strong></div><div class="tr93-track"><i style="width:${efficacy}%"></i></div></div>
+         </div>` : '';
+
+    return `<section class="tr93-exec">
+      <div class="tr93-section-title"><h3>Resumo executivo</h3><span>Visão gerencial do filtro selecionado</span></div>
+      <div class="tr93-kpis">${cards.join('')}</div>${bars}
+    </section>`;
+  }
+
+  function overview(rows) {
+    if (!rows?.length) return '';
+    return `<section class="tr93-overview"><h3>Panorama por treinamento</h3><div class="tr93-grid">${
+      rows.map((x) => {
+        const completion = percent(x.completed, x.total);
+        return `<div class="tr93-card"><div class="tr93-card-top"><strong>${esc(x.name)}</strong><small>${esc(x.stage)}</small></div>
+          <small>Previsão ${esc(x.date || '-')} • ${x.completed}/${x.total} concluídos • ${x.effective} eficazes • ${x.pending} pendentes</small>
+          <div class="tr93-mini"><i style="width:${completion}%"></i></div></div>`;
+      }).join('')
+    }</div></section>`;
+  }
+
+  function filters(ctx, cls = 'tr93-filters') {
+    const items = [
+      ['Treinamento', ctx.training],
+      ['Período', ctx.period],
+      ['Funcionário', ctx.employee],
+      ['Setor', ctx.sector],
+      ['Status', ctx.status]
+    ];
+    return `<div class="${cls}">${items.map(([l, v]) => `<div class="tr93-filter"><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`).join('')}</div>`;
+  }
+
+  function brandedHeader(ctx) {
+    return `<div class="tr93-head">
+      <div class="tr93-brand"><img class="tr93-logo" src="${esc(logoUrl())}" alt="Excellence System"><div>
+        <small>EXCELLENCE SYSTEM® • MP CONSULTORIA</small>
+        <h2>${esc(ctx.typeName)}</h2>
+        <p>${esc(ctx.company)}</p>
+      </div></div>
+      <div class="tr93-meta"><strong>${esc(ctx.training)}</strong><span>${new Date().toLocaleString('pt-BR')} • ${V}</span></div>
+    </div>`;
+  }
+
+  function brandedFooter() {
+    return `<div class="tr93-footer"><div><strong>Excellence System®</strong><br>Gestão da Qualidade e Desenvolvimento</div><div><strong>MP Consultoria</strong><br>Relatório gerado automaticamente</div></div>`;
+  }
+
+  function enhance(preview) {
+    if (!preview || preview.dataset.v93 === '1') return;
+    preview.dataset.v93 = '1';
+    preview.classList.add('tr93');
+
+    const ctx = context();
+    const stats = collect(preview, ctx.type);
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `${brandedHeader(ctx)}${filters(ctx)}${executive(stats, ctx)}${['geral', 'treinamento'].includes(ctx.type) ? overview(stats.trainingRows) : ''}`;
+    Array.from(wrap.children).reverse().forEach((el) => preview.prepend(el));
+    preview.insertAdjacentHTML('beforeend', brandedFooter());
+  }
+
+  function print(preview) {
+    enhance(preview);
+    const ctx = context();
+    const stats = collect(preview, ctx.type);
+    const clone = preview.cloneNode(true);
+
+    $$('.tr93-head,.tr93-filters,.tr93-exec,.tr93-overview,.tr93-footer', clone).forEach((el) => el.remove());
+    $$('.tr-report-title,.tr-report-kpis', clone).forEach((el) => el.remove());
+    $$('button,.tr-btn', clone).forEach((el) => el.remove());
+
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(frame);
+
+    const d = frame.contentDocument;
+    const w = frame.contentWindow;
+    const completion = percent(stats.completed, stats.total);
+    const efficacy = percent(stats.effective, stats.total);
+    const cards = [
+      ['Treinamentos', stats.trainings],
+      [ctx.type === 'pendencias' ? 'Pendências' : 'Público obrigatório', stats.total],
+      ['Concluídos', stats.completed],
+      ['Eficazes', stats.effective],
+      [ctx.type === 'pendencias' ? 'Atrasados' : 'Pendências', ctx.type === 'pendencias' ? stats.late : stats.pending],
+      ['Evidências', stats.evidence]
+    ];
+
+    d.open();
+    d.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(ctx.typeName)}</title><style>
+      @page{size:A4 landscape;margin:5mm}
+      *{box-sizing:border-box}
+      body{margin:0;font-family:Arial,sans-serif;color:#173846;font-size:7.3px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      .header{display:flex;align-items:center;justify-content:space-between;gap:15px;padding-bottom:5px;border-bottom:2px solid #073F5A}
+      .brand{display:flex;align-items:center;gap:8px}.brand img{width:31px;height:31px;object-fit:contain}.brand h1{margin:0;color:#073F5A;font-size:13px}.brand small{display:block;color:#607788;font-size:5.4px}
+      .stamp{text-align:right;color:#607788;font-size:5.5px}.stamp strong{display:block;color:#073F5A;font-size:7px}
+      .band{margin-top:4px;background:#073F5A;color:#fff;padding:5px 7px;border-radius:5px;display:flex;justify-content:space-between;align-items:center}.band small{font-size:4.8px;color:#bfdae4}.band h2{margin:1px 0 0;font-size:10px}.band span{font-size:5.5px}
+      .filters{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:3px;margin-top:4px}.filter{border:1px solid #d5e2e7;border-radius:4px;padding:3px 5px;background:#f8fbfc}.filter small{display:block;color:#607788;text-transform:uppercase;font-size:4px;font-weight:bold}.filter strong{display:block;color:#073F5A;font-size:5.4px;margin-top:1px}
+      .section-title{margin:5px 0 3px;color:#073F5A;font-size:7px;font-weight:bold}
+      .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:3px}.kpi{border:1px solid #d5e2e7;border-radius:4px;padding:3px 5px;background:#fbfdfe}.kpi small{display:block;color:#607788;text-transform:uppercase;font-size:4px}.kpi strong{display:block;color:#073F5A;font-size:9px;margin-top:1px}
+      .bars{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px}.bar{border:1px solid #d5e2e7;border-radius:4px;padding:3px 5px}.bar-top{display:flex;justify-content:space-between;font-size:4.7px;font-weight:bold}.track{height:3.5px;background:#e7eef1;border-radius:99px;overflow:hidden;margin-top:2px}.track i{display:block;height:100%;background:#0B607F}.bar.good .track i{background:#3b965f}
+      .overview{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:3px}.overview-card{border:1px solid #d5e2e7;border-radius:4px;padding:3px 5px}.overview-card strong{color:#073F5A;font-size:5.5px}.overview-card small{display:block;color:#607788;font-size:4.3px;margin-top:1px}
+      .detail{margin-top:5px;border-top:1px solid #dbe5e9;padding-top:3px}
+      .tr-report-block{margin-top:4px}.tr-report-block h3{margin:0 0 2px;color:#073F5A;font-size:6.5px}.tr-report-note{font-size:4.7px;color:#607788}
+      .tr-table{width:100%;border-collapse:collapse;min-width:0!important;font-size:5px}.tr-table th,.tr-table td{border:1px solid #d6e2e7;padding:2.2px 3px;text-align:left;vertical-align:top}.tr-table th{background:#edf4f7;color:#536f7a;font-size:4.3px;text-transform:uppercase}.tr-table thead{display:table-header-group}.tr-table tr{break-inside:avoid}
+      .tr-badge{display:inline-block;border:1px solid #c8d9df;border-radius:99px;padding:1px 3px;font-size:4.2px;background:#f4f8fa}.tr-evidence-list{display:grid;grid-template-columns:1fr 1fr;gap:3px}.tr-evidence{border:1px solid #d6e2e7;border-radius:4px;padding:3px}.tr-audit-cover{border:1px solid #073F5A;padding:4px}
+      .signatures{display:grid;grid-template-columns:1fr 1fr;gap:45px;margin-top:10px}.signatures div{border-top:1px solid #718893;text-align:center;padding-top:3px;color:#607788;font-size:4.8px}
+      .footer{margin-top:5px;padding-top:3px;border-top:1px solid #dbe5e9;display:flex;justify-content:space-between;color:#738891;font-size:4.3px}
+    </style></head><body>
+      <div class="header"><div class="brand"><img src="${esc(logoUrl())}"><div><h1>Excellence System®</h1><small>MP Consultoria • Gestão da Qualidade e Desenvolvimento</small></div></div><div class="stamp"><strong>${esc(ctx.company)}</strong>${new Date().toLocaleString('pt-BR')} • ${V}</div></div>
+      <div class="band"><div><small>TREINAMENTOS E DESENVOLVIMENTO</small><h2>${esc(ctx.typeName)}</h2></div><span>${esc(ctx.training)}</span></div>
+      <div class="filters">${[
+        ['Treinamento', ctx.training], ['Período', ctx.period], ['Funcionário', ctx.employee], ['Setor', ctx.sector], ['Status', ctx.status]
+      ].map(([l,v]) => `<div class="filter"><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`).join('')}</div>
+      <div class="section-title">Resumo executivo</div>
+      <div class="kpis">${cards.map(([l,v]) => `<div class="kpi"><small>${esc(l)}</small><strong>${esc(v)}</strong></div>`).join('')}</div>
+      ${stats.total && !['pendencias','evidencias'].includes(ctx.type) ? `<div class="bars">
+        <div class="bar"><div class="bar-top"><span>Conclusão do público</span><strong>${completion}%</strong></div><div class="track"><i style="width:${completion}%"></i></div></div>
+        <div class="bar good"><div class="bar-top"><span>Eficácia validada</span><strong>${efficacy}%</strong></div><div class="track"><i style="width:${efficacy}%"></i></div></div>
+      </div>` : ''}
+      ${stats.trainingRows.length ? `<div class="section-title">Panorama por treinamento</div><div class="overview">${stats.trainingRows.map((x) => `<div class="overview-card"><strong>${esc(x.name)}</strong><small>${esc(x.stage)} • ${x.completed}/${x.total} concluídos • ${x.effective} eficazes • ${x.pending} pendentes</small></div>`).join('')}</div>` : ''}
+      <div class="detail">${clone.innerHTML}</div>
+      <div class="signatures"><div>Responsável pelo treinamento / RH</div><div>Responsável pela empresa</div></div>
+      <div class="footer"><span>Relatório gerado automaticamente pelo Excellence System®</span><span>MP Consultoria • ${new Date().toLocaleString('pt-BR')}</span></div>
+    </body></html>`);
+    d.close();
+
+    const images = Array.from(d.images);
+    const ready = images.length ? Promise.all(images.map((img) => img.complete ? Promise.resolve() : new Promise((resolve) => {
+      img.onload = img.onerror = resolve;
+    }))) : Promise.resolve();
+
+    ready.then(() => setTimeout(() => {
+      w.focus();
+      w.print();
+      setTimeout(() => frame.remove(), 1200);
+    }, 180));
+  }
+
+  function run() {
+    requestAnimationFrame(() => {
+      injectCss();
+      enhance($('[data-report-preview]'));
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    const btn = event.target.closest?.('[data-r-print]');
+    if (!btn || !btn.closest('.tr-root')) return;
+    const preview = $('[data-report-preview]');
+    if (!preview) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    print(preview);
+  }, true);
+
+  new MutationObserver(run).observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('load', run);
+  run();
+  console.info(`Excellence System® relatórios de Treinamentos ${V} carregados.`);
+})();
