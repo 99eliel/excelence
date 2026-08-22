@@ -1,7 +1,7 @@
 {
-  "version": "20260821-93",
+  "version": "20260821-94",
   "name": "Excellence System®",
   "updatedAt": "2026-08-21",
-  "message": "Relatórios de Treinamentos personalizados no padrão visual do sistema.",
-  "notes": "Os relatórios de Treinamentos agora seguem o padrão visual gerencial do Excellence System®, com cabeçalho institucional com logomarca, faixa temática, filtros destacados, resumo executivo, indicadores de conclusão, eficácia, pendências e evidências, panorama por treinamento, tabelas mais organizadas, assinaturas e rodapé institucional. A impressão em A4 paisagem foi refeita para ficar mais próxima do padrão usado nos relatórios de Apontamento, mantendo todos os tipos de relatório existentes."
+  "message": "Treinamentos concluídos agora podem ser excluídos com limpeza completa.",
+  "notes": "O botão Excluir agora permite remover também treinamentos que já possuem realizações ou estão concluídos. A exclusão pede confirmação e limpa os vínculos do treinamento: matriz/público, realizações, avaliações de eficácia, evidências anexadas no Storage e PIDs automáticos relacionados, evitando registros órfãos."
 }
