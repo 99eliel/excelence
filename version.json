@@ -1,7 +1,7 @@
 {
-  "version": "20260821-94",
-  "name": "Excellence System®",
-  "updatedAt": "2026-08-21",
-  "message": "Treinamentos concluídos agora podem ser excluídos com limpeza completa.",
-  "notes": "O botão Excluir agora permite remover também treinamentos que já possuem realizações ou estão concluídos. A exclusão pede confirmação e limpa os vínculos do treinamento: matriz/público, realizações, avaliações de eficácia, evidências anexadas no Storage e PIDs automáticos relacionados, evitando registros órfãos."
+  "version": "20260906-95",
+  "name": "Excellence System",
+  "updatedAt": "2026-09-06",
+  "message": "Identidade visual e autenticação revisadas.",
+  "notes": "O símbolo de marca registrada foi removido da identidade exibida pelo sistema, a exibição da logo passou a priorizar o ativo de 512 px, os e-mails de autenticação foram configurados para português do Brasil e os textos de cadastro agora tratam a senha criada pelo administrador como senha de acesso, refletindo o comportamento real do Firebase Authentication para novos usuários."
 }
