@@ -128,6 +128,56 @@ async function writeAgendaCache(cacheKey, payload) {
   await admin.firestore().doc(`agenda_cache/${cacheKey}`).set(data, { merge: true });
 }
 
+async function requireActiveAdmin(uid) {
+  if (!uid) throw new HttpsError('unauthenticated', 'Faça login para continuar.');
+  const snap = await admin.firestore().doc(`usuarios/${uid}`).get();
+  const perfil = snap.exists ? snap.data() : null;
+  if (!perfil || perfil.ativo !== true || perfil.tipo !== 'admin') {
+    throw new HttpsError('permission-denied', 'Apenas administradores ativos podem executar esta ação.');
+  }
+  return perfil;
+}
+
+exports.alterarSenhaUsuario = onCall({
+  region: 'southamerica-east1',
+  timeoutSeconds: 30,
+  memory: '256MiB'
+}, async (request) => {
+  await requireActiveAdmin(request.auth?.uid);
+
+  const userId = String(request.data?.userId || '').trim();
+  const novaSenha = String(request.data?.novaSenha || '');
+
+  if (!userId) throw new HttpsError('invalid-argument', 'Usuário não informado.');
+  if (novaSenha.length < 6) throw new HttpsError('invalid-argument', 'A nova senha precisa ter pelo menos 6 caracteres.');
+  if (novaSenha.length > 128) throw new HttpsError('invalid-argument', 'A nova senha é muito longa.');
+
+  const usuarioRef = admin.firestore().doc(`usuarios/${userId}`);
+  const usuarioSnap = await usuarioRef.get();
+  if (!usuarioSnap.exists) throw new HttpsError('not-found', 'Usuário não encontrado no sistema.');
+
+  try {
+    const authUser = await admin.auth().getUser(userId);
+    await admin.auth().updateUser(authUser.uid, { password: novaSenha });
+    await usuarioRef.set({
+      senhaAtualizadaEm: admin.firestore.FieldValue.serverTimestamp(),
+      senhaAtualizadaPor: request.auth.uid
+    }, { merge: true });
+
+    return {
+      ok: true,
+      userId: authUser.uid,
+      email: authUser.email || usuarioSnap.data()?.email || ''
+    };
+  } catch (error) {
+    console.error('Erro ao alterar senha do usuário:', error);
+    if (error?.code === 'auth/user-not-found') {
+      throw new HttpsError('not-found', 'Este usuário não existe no Firebase Authentication.');
+    }
+    throw new HttpsError('internal', 'Não foi possível alterar a senha agora.');
+  }
+});
+
 exports.getAgendaMarcia = onCall({
   region: 'southamerica-east1',
   timeoutSeconds: 60,
