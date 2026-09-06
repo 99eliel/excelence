@@ -1,7 +1,7 @@
 {
-  "version": "20260906-97",
+  "version": "20260906-98",
   "name": "Excellence System",
   "updatedAt": "2026-09-06",
-  "message": "Central da Empresa criada para orientar o usuário pelo que precisa fazer.",
-  "notes": "O perfil cliente agora recebe uma tela inicial própria chamada Central da Empresa, sem substituir os módulos existentes. A central organiza ações em Preciso fazer, Aguardando e Concluído, consolida pendências do diagnóstico ISO, solicitações de envio do Ecossistema e andamento dos Treinamentos, e mantém atalhos para ISO, Documentos, Arquivos recebidos, Diário de bordo, Produção e Treinamentos conforme as permissões do usuário. A administração também ganhou perfis prontos de acesso: Responsável da empresa, Qualidade/RH, Produção e Consulta, mantendo a possibilidade de personalização manual. Foi registrado um ponto de retorno explícito para a versão 96 antes da alteração."
+  "message": "Cadastro de usuário agora permite mostrar ou ocultar a senha.",
+  "notes": "O controle de visualização de senha foi centralizado em um componente reutilizável. Ele continua funcionando no login e agora também aparece no cadastro de novo usuário, permitindo ao administrador conferir a senha antes de criar o acesso. A alteração não modifica a lógica de autenticação nem os dados existentes."
 }
