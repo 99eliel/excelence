@@ -1,7 +1,7 @@
 {
-  "version": "20260906-95",
+  "version": "20260906-96",
   "name": "Excellence System",
   "updatedAt": "2026-09-06",
-  "message": "Identidade visual e autenticação revisadas.",
-  "notes": "O símbolo de marca registrada foi removido da identidade exibida pelo sistema, a exibição da logo passou a priorizar o ativo de 512 px, os e-mails de autenticação foram configurados para português do Brasil e os textos de cadastro agora tratam a senha criada pelo administrador como senha de acesso, refletindo o comportamento real do Firebase Authentication para novos usuários."
+  "message": "Administrador agora pode alterar a senha do usuário imediatamente.",
+  "notes": "O botão de senha na gestão de usuários passou a abrir uma janela de alteração imediata. O administrador informa e confirma a nova senha, e uma Cloud Function protegida valida que o solicitante é administrador ativo antes de atualizar a senha diretamente no Firebase Authentication. A nova senha passa a valer no próximo login do usuário, sem envio de e-mail de redefinição."
 }
