@@ -1,7 +1,7 @@
 {
-  "version": "20260906-96",
+  "version": "20260906-97",
   "name": "Excellence System",
   "updatedAt": "2026-09-06",
-  "message": "Administrador agora pode alterar a senha do usuário imediatamente.",
-  "notes": "O botão de senha na gestão de usuários passou a abrir uma janela de alteração imediata. O administrador informa e confirma a nova senha, e uma Cloud Function protegida valida que o solicitante é administrador ativo antes de atualizar a senha diretamente no Firebase Authentication. A nova senha passa a valer no próximo login do usuário, sem envio de e-mail de redefinição."
+  "message": "Central da Empresa criada para orientar o usuário pelo que precisa fazer.",
+  "notes": "O perfil cliente agora recebe uma tela inicial própria chamada Central da Empresa, sem substituir os módulos existentes. A central organiza ações em Preciso fazer, Aguardando e Concluído, consolida pendências do diagnóstico ISO, solicitações de envio do Ecossistema e andamento dos Treinamentos, e mantém atalhos para ISO, Documentos, Arquivos recebidos, Diário de bordo, Produção e Treinamentos conforme as permissões do usuário. A administração também ganhou perfis prontos de acesso: Responsável da empresa, Qualidade/RH, Produção e Consulta, mantendo a possibilidade de personalização manual. Foi registrado um ponto de retorno explícito para a versão 96 antes da alteração."
 }
