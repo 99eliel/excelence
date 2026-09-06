@@ -19,6 +19,12 @@ export const secondaryApp = initializeApp(firebaseConfig, "ExcellenceSystemSecon
 
 export const auth = getAuth(app);
 export const secondaryAuth = getAuth(secondaryApp);
+
+// Mantém os e-mails transacionais do Firebase Authentication em português.
+// Isso afeta, entre outros, os e-mails enviados por sendPasswordResetEmail.
+auth.languageCode = "pt-BR";
+secondaryAuth.languageCode = "pt-BR";
+
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const functions = getFunctions(app, "southamerica-east1");
