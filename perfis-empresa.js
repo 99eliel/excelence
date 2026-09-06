@@ -91,6 +91,14 @@ function optionHTML() {
   return Object.entries(PRESETS).map(([id,p]) => `<option value="${id}">${esc(p.label)}</option>`).join('');
 }
 
+function markPersonalized(card) {
+  const id = card?.dataset?.userId;
+  const usuario = usuarios.get(id);
+  if (usuario) usuario.perfilOperacional = 'personalizado';
+  const current = card?.querySelector('.perfil-preset-current');
+  if (current) current.textContent = 'Personalizado';
+}
+
 function enhanceCard(card) {
   if (!isAdmin() || card.dataset.perfilPreset === VERSION) return;
   const id = card.dataset.userId;
@@ -154,12 +162,23 @@ function detectManualChanges(card) {
   card.dataset.perfilManualBound = '1';
   card.addEventListener('change', event => {
     if (!event.target.matches('input[name="permissao"]')) return;
-    const id = card.dataset.userId;
-    const usuario = usuarios.get(id);
-    if (usuario) usuario.perfilOperacional = 'personalizado';
-    const current = card.querySelector('.perfil-preset-current');
-    if (current) current.textContent = 'Personalizado';
+    markPersonalized(card);
   });
+}
+
+async function persistCustomizedProfile(card) {
+  const id = card?.dataset?.userId;
+  const usuario = usuarios.get(id);
+  if (!id || !usuario || usuario.tipo === 'admin' || usuario.perfilOperacional !== 'personalizado') return;
+  try {
+    await updateDoc(doc(db,'usuarios',id), {
+      perfilOperacional:'personalizado',
+      perfilOperacionalAtualizadoEm:serverTimestamp(),
+      perfilOperacionalAtualizadoPor:auth.currentUser?.uid || ''
+    });
+  } catch (error) {
+    console.warn('Não foi possível registrar o perfil personalizado:', error);
+  }
 }
 
 function enhance() {
@@ -181,6 +200,17 @@ function startObserver() {
   observerStarted = true;
   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
 }
+
+document.addEventListener('click', event => {
+  const shortcut = event.target.closest?.('[data-only-apontamento],[data-all-perms],[data-no-perms]');
+  if (shortcut) markPersonalized(shortcut.closest('[data-perm-user-card]'));
+
+  const save = event.target.closest?.('[data-save-perms]');
+  if (save) {
+    const card = save.closest('[data-perm-user-card]');
+    setTimeout(() => persistCustomizedProfile(card), 80);
+  }
+}, true);
 
 startObserver();
 onAuthStateChanged(auth, async user => {
