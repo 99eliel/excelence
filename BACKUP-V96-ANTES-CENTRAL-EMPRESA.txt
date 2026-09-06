@@ -1,0 +1,17 @@
+BACKUP / PONTO DE RETORNO
+
+Data: 06/09/2026
+Versão estável antes da criação da Central da Empresa: 20260906-96
+Commit de referência: 2f68137c44e98c581b3137e85c976ab9957f5ffa
+
+Este commit representa o estado completo do sistema antes da nova experiência do usuário da empresa.
+
+Em caso de regressão, todo o estado anterior pode ser recuperado a partir desse commit pelo histórico do Git.
+
+Objetivo da próxima alteração:
+- adicionar uma Central da Empresa como tela inicial do perfil cliente;
+- manter Estrutura ISO, Ecossistema, Arquivos, Diário, Apontamento e Treinamentos intactos;
+- organizar ações em Preciso fazer / Aguardando / Concluído;
+- adicionar perfis prontos de permissão sem apagar a personalização existente.
+
+Nenhuma coleção ou dado de produção é migrado por este backup.
