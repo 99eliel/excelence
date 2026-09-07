@@ -1,0 +1,16 @@
+BACKUP / PONTO DE RETORNO
+
+Data: 07/09/2026
+Versão estável antes do relatório individual de funcionário: 20260907-99
+Commit de referência: c08976caeb85b76068c9425dd6e592363dde98c5
+
+Este commit representa o estado completo do sistema após a inclusão de fotos na ficha central de Funcionários e antes da criação do relatório individual.
+
+Em caso de regressão, o estado anterior pode ser recuperado a partir desse commit pelo histórico do Git.
+
+Objetivo da próxima alteração:
+- adicionar botão Gerar relatório na Ficha do funcionário;
+- gerar relatório A4 com foto e dados cadastrais;
+- listar treinamentos efetivamente realizados pelo funcionário;
+- exibir status e eficácia sem alterar os registros existentes;
+- manter Funcionários e Treinamentos como fontes de dados, sem duplicar histórico.
