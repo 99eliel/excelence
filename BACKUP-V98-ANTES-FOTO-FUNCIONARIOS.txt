@@ -1,0 +1,17 @@
+BACKUP / PONTO DE RETORNO
+
+Data: 07/09/2026
+Versão estável antes da inclusão de foto na ficha de funcionários: 20260906-98
+Commit de referência: dcc6d70da98ef9ed3e2acc319f91f66580827a6c
+
+Este commit representa o estado completo do sistema antes da inclusão do upload de foto no cadastro central de funcionários.
+
+Objetivo da próxima alteração:
+- adicionar foto ao cadastro central do funcionário;
+- salvar a imagem no Firebase Storage;
+- gravar fotoUrl/fotoPath/fotoNome no cadastro central;
+- sincronizar os metadados da foto com a base usada por Treinamentos;
+- exibir a foto na listagem e na ficha do funcionário;
+- manter a estrutura pronta para relatório individual com dados pessoais e histórico de treinamentos.
+
+Em caso de regressão, o estado anterior pode ser recuperado pelo commit acima.
