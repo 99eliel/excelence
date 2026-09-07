@@ -77,6 +77,15 @@ service firebase.storage {
         || request.resource.contentType == "application/octet-stream";
     }
 
+    function fotoFuncionarioPermitida() {
+      return request.resource.size < 8 * 1024 * 1024
+        && (
+          request.resource.contentType == "image/jpeg"
+          || request.resource.contentType == "image/png"
+          || request.resource.contentType == "image/webp"
+        );
+    }
+
     function uploadPermitido() {
       return souAdmin() && tamanhoPermitido() && tipoArquivoPermitido();
     }
@@ -127,7 +136,12 @@ service firebase.storage {
       );
     }
 
-    // Evidências de treinamentos: listas, provas, certificados, fotos e planilhas de apoio.
+    match /empresas/{empresaId}/funcionarios/{funcionarioId}/foto/{allPaths=**} {
+      allow read: if souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId);
+      allow create, update: if souAdmin() && fotoFuncionarioPermitida();
+      allow delete: if souAdmin();
+    }
+
     match /empresas/{empresaId}/treinamentos/{allPaths=**} {
       allow read: if souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId);
       allow create, update: if (souAdmin() || (temPermissao("treinamentos") && minhaEmpresa() == empresaId))
