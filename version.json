@@ -1,7 +1,7 @@
 {
-  "version": "20260907-102",
+  "version": "20260907-103",
   "name": "Excellence System",
   "updatedAt": "2026-09-07",
-  "message": "Cadastro de usuários agora garante a senha definida pelo administrador.",
-  "notes": "O fluxo de cadastro administrativo foi corrigido para não informar sucesso quando o e-mail já existia no Firebase Authentication com outra senha. Para e-mails novos, a conta continua sendo criada normalmente. Para e-mails já existentes e vinculados a um perfil do sistema, a senha digitada pelo administrador é aplicada imediatamente usando a Cloud Function segura de alteração de senha já publicada. Quando existe um e-mail no Authentication sem perfil vinculável, o sistema interrompe o cadastro e informa claramente a inconsistência em vez de criar um acesso enganoso. Um ponto de retorno completo da v101 foi registrado antes da alteração."
+  "message": "Acessos pendentes agora podem ser ativados diretamente pelo administrador.",
+  "notes": "A seção Convites e acessos pendentes ganhou a ação Ativar acesso. O administrador define e confirma a senha, e uma Cloud Function protegida localiza a conta pelo e-mail no Firebase Authentication, aplica a senha, garante que o acesso esteja habilitado, cria ou completa o perfil em usuarios e vincula o convite à empresa correta. Se a conta ainda não existir no Authentication, a função também consegue criá-la. Após a ativação o acesso deixa de ficar pendente e a senha definida passa a valer imediatamente. Um ponto de retorno da v102 foi registrado antes da alteração."
 }
