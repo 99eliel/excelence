@@ -178,6 +178,86 @@ exports.alterarSenhaUsuario = onCall({
   }
 });
 
+exports.ativarAcessoPendente = onCall({
+  region: 'southamerica-east1',
+  timeoutSeconds: 30,
+  memory: '256MiB'
+}, async (request) => {
+  await requireActiveAdmin(request.auth?.uid);
+
+  const conviteId = String(request.data?.conviteId || '').trim();
+  const novaSenha = String(request.data?.novaSenha || '');
+  if (!conviteId) throw new HttpsError('invalid-argument', 'Convite não informado.');
+  if (novaSenha.length < 6) throw new HttpsError('invalid-argument', 'A senha precisa ter pelo menos 6 caracteres.');
+  if (novaSenha.length > 128) throw new HttpsError('invalid-argument', 'A senha é muito longa.');
+
+  const conviteRef = admin.firestore().doc(`convites_acesso/${conviteId}`);
+  const conviteSnap = await conviteRef.get();
+  if (!conviteSnap.exists) throw new HttpsError('not-found', 'Convite não encontrado.');
+
+  const convite = conviteSnap.data() || {};
+  if (convite.ativo !== true) throw new HttpsError('failed-precondition', 'Este convite está inativo.');
+
+  const email = String(convite.email || '').trim().toLowerCase();
+  if (!email) throw new HttpsError('failed-precondition', 'O convite não possui e-mail válido.');
+
+  let authUser;
+  let created = false;
+  try {
+    authUser = await admin.auth().getUserByEmail(email);
+    authUser = await admin.auth().updateUser(authUser.uid, {
+      password: novaSenha,
+      disabled: false
+    });
+  } catch (error) {
+    if (error?.code !== 'auth/user-not-found') {
+      console.error('Erro ao localizar acesso pendente:', error);
+      throw new HttpsError('internal', 'Não foi possível preparar o acesso deste usuário.');
+    }
+    try {
+      authUser = await admin.auth().createUser({ email, password: novaSenha, disabled: false });
+      created = true;
+    } catch (createError) {
+      console.error('Erro ao criar acesso pendente:', createError);
+      throw new HttpsError('internal', 'Não foi possível criar o acesso deste usuário.');
+    }
+  }
+
+  const usuarioRef = admin.firestore().doc(`usuarios/${authUser.uid}`);
+  const perfil = {
+    nome: convite.nome || authUser.displayName || email,
+    email,
+    tipo: convite.tipo || 'cliente',
+    empresaId: convite.empresaId || '',
+    ativo: true,
+    acessoPrincipal: convite.acessoPrincipal === true,
+    conviteId: conviteSnap.id,
+    credencialDefinidaPeloAdmin: true,
+    ativadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    ativadoPor: request.auth.uid,
+    atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    atualizadoPor: request.auth.uid
+  };
+  if (Array.isArray(convite.permissoes)) perfil.permissoes = convite.permissoes;
+
+  await usuarioRef.set(perfil, { merge: true });
+  await conviteRef.set({
+    usado: true,
+    usadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    vinculadoUid: authUser.uid,
+    ativo: true,
+    atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    atualizadoPor: request.auth.uid
+  }, { merge: true });
+
+  return {
+    ok: true,
+    created,
+    userId: authUser.uid,
+    email
+  };
+});
+
 exports.getAgendaMarcia = onCall({
   region: 'southamerica-east1',
   timeoutSeconds: 60,
