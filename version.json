@@ -1,7 +1,7 @@
 {
-  "version": "20260907-101",
+  "version": "20260907-102",
   "name": "Excellence System",
   "updatedAt": "2026-09-07",
-  "message": "Nova logo registrada da MP Consultoria aplicada ao sistema.",
-  "notes": "A identidade visual foi atualizada para usar a nova logo circular azul da MP Consultoria com o símbolo ® incorporado ao desenho. O ativo principal passou a ser vetorial em SVG para manter alta nitidez em qualquer resolução. A abertura do sistema, ícones/PWA e a configuração central de marca agora apontam para a nova logo, e relatórios gerados em iframe também têm a marca substituída automaticamente. O nome Excellence System continua sem símbolo de marca registrada. Um ponto de retorno completo da v100 foi registrado antes da alteração."
+  "message": "Cadastro de usuários agora garante a senha definida pelo administrador.",
+  "notes": "O fluxo de cadastro administrativo foi corrigido para não informar sucesso quando o e-mail já existia no Firebase Authentication com outra senha. Para e-mails novos, a conta continua sendo criada normalmente. Para e-mails já existentes e vinculados a um perfil do sistema, a senha digitada pelo administrador é aplicada imediatamente usando a Cloud Function segura de alteração de senha já publicada. Quando existe um e-mail no Authentication sem perfil vinculável, o sistema interrompe o cadastro e informa claramente a inconsistência em vez de criar um acesso enganoso. Um ponto de retorno completo da v101 foi registrado antes da alteração."
 }
