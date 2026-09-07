@@ -1,0 +1,16 @@
+BACKUP / PONTO DE RETORNO
+
+Data: 07/09/2026
+Versão estável antes da troca da identidade visual: 20260907-100
+Commit de referência: bf01269c2843b13debaddfb6a49a3cc57d792b04
+
+Este commit representa o estado completo do sistema antes da aplicação da nova logo registrada da MP Consultoria.
+
+Objetivo da próxima alteração:
+- substituir a logo visual antiga pela nova identidade da MP Consultoria;
+- manter o símbolo ® dentro do desenho da logo registrada;
+- manter o nome Excellence System sem símbolo de marca registrada;
+- usar um ativo vetorial para alta nitidez em telas e relatórios;
+- atualizar abertura, ícones/PWA e pontos centralizados de marca.
+
+Em caso de regressão, o estado anterior pode ser recuperado pelo histórico do Git a partir do commit acima.
