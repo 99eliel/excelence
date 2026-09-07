@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">MP Consultoria</title>
+  <desc id="desc">Logo circular azul da MP Consultoria com monograma MA, símbolo de marca registrada, texto CONSULTORIA e mpedro_consultoria.</desc>
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="70%">
+      <stop offset="0%" stop-color="#0b4f8d"/>
+      <stop offset="72%" stop-color="#083f75"/>
+      <stop offset="100%" stop-color="#063865"/>
+    </radialGradient>
+  </defs>
+  <circle cx="512" cy="512" r="474" fill="url(#bg)"/>
+  <g fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M250 617 L294 258 L513 475 L724 267"/>
+    <path d="M484 608 L735 356 L775 618 L582 505"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-width="5">
+    <circle cx="796" cy="300" r="31"/>
+  </g>
+  <text x="796" y="314" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="39" font-weight="500">R</text>
+  <text x="512" y="735" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="58" font-weight="400" letter-spacing="15">CONSULTORIA</text>
+  <text x="512" y="822" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="400" letter-spacing="6">mpedro_consultoria</text>
+</svg>
