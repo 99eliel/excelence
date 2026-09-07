@@ -37,7 +37,6 @@
       img.classList.contains('login-logo') ||
       img.classList.contains('sidebar-logo') ||
       img.classList.contains('tr93-logo') ||
-      img.classList.contains('logo') ||
       /(?:^|\/)(?:logo\.png|icon-(?:192|512)\.png|logo-mp-consultoria\.svg)(?:\?|$)/i.test(src) ||
       /MP Consultoria|Excellence System/i.test(alt);
 
