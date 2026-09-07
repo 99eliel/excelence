@@ -1,7 +1,7 @@
 {
-  "version": "20260907-99",
+  "version": "20260907-100",
   "name": "Excellence System",
   "updatedAt": "2026-09-07",
-  "message": "Funcionários agora possuem foto vinculada à ficha central.",
-  "notes": "A área central de Funcionários ganhou upload de foto em JPG, PNG ou WebP, com armazenamento protegido no Firebase Storage e vínculo direto ao cadastro do colaborador. A foto aparece na listagem e na ficha individual, e seus metadados também são sincronizados com a base usada por Treinamentos. A ficha passou a mostrar o histórico de treinamentos do funcionário, preparando a estrutura para o próximo relatório individual com foto, dados cadastrais e treinamentos realizados. Um ponto de retorno da v98 foi registrado antes da alteração."
+  "message": "Ficha do funcionário agora gera relatório individual em PDF.",
+  "notes": "A Ficha do funcionário ganhou o botão Gerar relatório / PDF. O relatório individual usa a foto e os dados da base central de Funcionários e cruza o histórico da matriz de competências com os planos de Treinamentos para apresentar capacitações realizadas, carga horária, instrutor, status, eficácia e avaliador. O layout foi preparado em A4 retrato com identidade institucional, resumo executivo e assinaturas. Um ponto de retorno completo da v99 foi registrado antes da alteração."
 }
