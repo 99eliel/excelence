@@ -1,10 +1,10 @@
 (function () {
   'use strict';
 
-  const VERSION = window.EXCELLENCE_SYSTEM_VERSION || '20260906-95';
+  const VERSION = window.EXCELLENCE_SYSTEM_VERSION || '20260907-101';
   const BRAND_NAME = 'Excellence System';
   const COMPANY_NAME = 'MP Consultoria';
-  const HD_LOGO = `icon-512.png?v=${VERSION}`;
+  const HD_LOGO = `logo-mp-consultoria.svg?v=${VERSION}`;
 
   window.EXCELLENCE_BRAND = Object.freeze({
     name: BRAND_NAME,
@@ -32,11 +32,14 @@
     if (!(img instanceof (baseDocument.defaultView?.HTMLImageElement || HTMLImageElement))) return;
 
     const src = String(img.getAttribute('src') || '');
+    const alt = String(img.getAttribute('alt') || '');
     const isBrandLogo = img.classList.contains('boot-logo') ||
       img.classList.contains('login-logo') ||
       img.classList.contains('sidebar-logo') ||
       img.classList.contains('tr93-logo') ||
-      /(?:^|\/)logo\.png(?:\?|$)/i.test(src);
+      img.classList.contains('logo') ||
+      /(?:^|\/)(?:logo\.png|icon-(?:192|512)\.png|logo-mp-consultoria\.svg)(?:\?|$)/i.test(src) ||
+      /MP Consultoria|Excellence System/i.test(alt);
 
     if (!isBrandLogo) return;
 
@@ -46,6 +49,7 @@
       img.src = HD_LOGO;
     }
 
+    img.removeAttribute('srcset');
     img.decoding = 'async';
     img.style.imageRendering = 'auto';
     img.style.objectFit = 'contain';
@@ -106,7 +110,7 @@
     };
 
     frame.addEventListener('load', clean);
-    [0, 25, 75, 150, 220].forEach(ms => setTimeout(clean, ms));
+    [0, 25, 75, 150, 220, 400].forEach(ms => setTimeout(clean, ms));
   }
 
   function normalizeDocument() {
