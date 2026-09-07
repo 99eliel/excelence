@@ -1,7 +1,7 @@
 {
-  "version": "20260907-100",
+  "version": "20260907-101",
   "name": "Excellence System",
   "updatedAt": "2026-09-07",
-  "message": "Ficha do funcionário agora gera relatório individual em PDF.",
-  "notes": "A Ficha do funcionário ganhou o botão Gerar relatório / PDF. O relatório individual usa a foto e os dados da base central de Funcionários e cruza o histórico da matriz de competências com os planos de Treinamentos para apresentar capacitações realizadas, carga horária, instrutor, status, eficácia e avaliador. O layout foi preparado em A4 retrato com identidade institucional, resumo executivo e assinaturas. Um ponto de retorno completo da v99 foi registrado antes da alteração."
+  "message": "Nova logo registrada da MP Consultoria aplicada ao sistema.",
+  "notes": "A identidade visual foi atualizada para usar a nova logo circular azul da MP Consultoria com o símbolo ® incorporado ao desenho. O ativo principal passou a ser vetorial em SVG para manter alta nitidez em qualquer resolução. A abertura do sistema, ícones/PWA e a configuração central de marca agora apontam para a nova logo, e relatórios gerados em iframe também têm a marca substituída automaticamente. O nome Excellence System continua sem símbolo de marca registrada. Um ponto de retorno completo da v100 foi registrado antes da alteração."
 }
