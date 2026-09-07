@@ -1,0 +1,14 @@
+BACKUP / PONTO DE RETORNO
+
+Data: 07/09/2026
+Versão estável antes da correção estrutural do cadastro de usuários: 20260907-101
+Commit de referência: 23c406b2efc98fcbe92a01df5d9a32a1cff7b46f
+
+Este commit representa o estado completo do sistema antes da alteração do fluxo de criação de usuários.
+
+Motivo da alteração:
+- o cadastro antigo criava usuários pelo Authentication secundário no navegador;
+- quando o e-mail já existia no Firebase Authentication, a senha digitada pelo administrador não era aplicada;
+- a correção passa a criar ou atualizar a credencial por Cloud Function administrativa, garantindo que a senha informada pelo admin seja a senha válida daquele acesso.
+
+Em caso de regressão, o estado anterior pode ser recuperado a partir do commit acima.
