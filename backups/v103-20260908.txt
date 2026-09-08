@@ -1,0 +1,11 @@
+PONTO DE RETORNO — Excellence System v103
+
+Commit estável antes da correção estrutural do cadastro de usuários:
+d8a59a90c19247691ae0b077ef48f4cc22b5f8ed
+
+Data do registro: 2026-09-08
+
+Motivo do backup:
+Antes de substituir o fluxo de cadastro de usuários por uma operação administrativa única no backend, garantindo que Authentication e perfil Firestore sejam concluídos juntos.
+
+Para recuperação, usar o commit acima como referência do estado completo da v103.
