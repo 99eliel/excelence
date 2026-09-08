@@ -328,3 +328,5 @@ exports.getAgendaMarcia = onCall({
     throw new HttpsError('internal', 'Não foi possível carregar a agenda agora.');
   }
 });
+
+exports.cadastrarUsuarioAdmin = require('./usuarios').cadastrarUsuarioAdmin;
