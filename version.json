@@ -1,7 +1,7 @@
 {
-  "version": "20260907-103",
+  "version": "20260908-104",
   "name": "Excellence System",
-  "updatedAt": "2026-09-07",
-  "message": "Acessos pendentes agora podem ser ativados diretamente pelo administrador.",
-  "notes": "A seção Convites e acessos pendentes ganhou a ação Ativar acesso. O administrador define e confirma a senha, e uma Cloud Function protegida localiza a conta pelo e-mail no Firebase Authentication, aplica a senha, garante que o acesso esteja habilitado, cria ou completa o perfil em usuarios e vincula o convite à empresa correta. Se a conta ainda não existir no Authentication, a função também consegue criá-la. Após a ativação o acesso deixa de ficar pendente e a senha definida passa a valer imediatamente. Um ponto de retorno da v102 foi registrado antes da alteração."
+  "updatedAt": "2026-09-08",
+  "message": "Usuários cadastrados pelo administrador agora já ficam prontos para login imediato.",
+  "notes": "O cadastro administrativo foi movido para uma operação única e segura no backend. Ao salvar, o sistema cria ou atualiza a conta no Firebase Authentication, aplica exatamente a senha definida pelo administrador, habilita o acesso e grava o perfil em usuarios vinculado à empresa na mesma operação. Não existe mais etapa de ativação posterior para novos cadastros. E-mails antigos que ficaram incompletos podem ser corrigidos simplesmente cadastrando novamente o mesmo e-mail com a senha desejada. Um ponto de retorno completo da v103 foi registrado antes da alteração."
 }
