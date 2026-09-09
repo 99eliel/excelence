@@ -19,6 +19,7 @@
     [/Excellence System\s*®/g, BRAND_NAME],
     [/ISO 9001\s*[:\-–]?\s*2026/gi, 'ISO 9001:2015'],
     [/ISO\s*9001\/2026/gi, 'ISO 9001:2015'],
+    [/Documentos\s+2026\s*-\s*Draft/gi, 'Documentos complementares'],
     [/Senha provisória/g, 'Senha de acesso'],
     [/senha provisória/g, 'senha de acesso'],
     [/Gerar senha provisória/g, 'Gerar senha segura'],
