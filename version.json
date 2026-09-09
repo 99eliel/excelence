@@ -1,7 +1,7 @@
 {
-  "version": "20260908-104",
+  "version": "20260908-105",
   "name": "Excellence System",
   "updatedAt": "2026-09-08",
-  "message": "Usuários cadastrados pelo administrador agora já ficam prontos para login imediato.",
-  "notes": "O cadastro administrativo foi movido para uma operação única e segura no backend. Ao salvar, o sistema cria ou atualiza a conta no Firebase Authentication, aplica exatamente a senha definida pelo administrador, habilita o acesso e grava o perfil em usuarios vinculado à empresa na mesma operação. Não existe mais etapa de ativação posterior para novos cadastros. E-mails antigos que ficaram incompletos podem ser corrigidos simplesmente cadastrando novamente o mesmo e-mail com a senha desejada. Um ponto de retorno completo da v103 foi registrado antes da alteração."
+  "message": "ISO facultativa por empresa, Excel nos documentos e relatórios com identidade padronizada.",
+  "notes": "A referência exibida da ISO foi padronizada como ISO 9001:2015. A Gestão ISO agora pode ser ativada ou desativada individualmente dentro de cada empresa; quando desativada, usuários da empresa deixam de ver e acessar a ISO, mas os dados existentes são preservados. O Ecossistema documental e os envios liberados para clientes agora aceitam Excel XLS/XLSX com campos e permissões próprios, incluindo limpeza de arquivos ao excluir itens ou pastas. A identidade dos relatórios foi centralizada: o símbolo ® é removido dos textos dos relatórios, enquanto a logo registrada da MP Consultoria permanece e é aplicada em relatórios impressos, janelas, iframes e PDFs gerados pelo sistema. Um ponto de retorno completo da v104 foi registrado antes da alteração."
 }
