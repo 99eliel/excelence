@@ -11,6 +11,10 @@ service firebase.storage {
       return /databases/(default)/documents/usuarios/$(request.auth.uid);
     }
 
+    function empresaPath(empresaId) {
+      return /databases/(default)/documents/empresas/$(empresaId);
+    }
+
     function recursoPath(recursoId) {
       return /databases/(default)/documents/empresa_recursos/$(recursoId);
     }
@@ -53,6 +57,21 @@ service firebase.storage {
           || meuUsuario().permissoes.hasAny(areas)
         )
       );
+    }
+
+    function isoAtivaParaMinhaEmpresa() {
+      return souAdmin() || (
+        souCliente()
+        && firestore.exists(empresaPath(minhaEmpresa()))
+        && (
+          !firestore.get(empresaPath(minhaEmpresa())).data.keys().hasAny(["isoAtiva"])
+          || firestore.get(empresaPath(minhaEmpresa())).data.isoAtiva == true
+        )
+      );
+    }
+
+    function temPermissaoIso() {
+      return temPermissao("estrutura_iso") && isoAtivaParaMinhaEmpresa();
     }
 
     function tamanhoPermitido() {
@@ -112,7 +131,7 @@ service firebase.storage {
     }
 
     match /materiais-apoio/{allPaths=**} {
-      allow read: if souAdmin() || temAlgumaPermissao(["estrutura_iso", "ecossistema"]);
+      allow read: if souAdmin() || temPermissao("ecossistema") || temPermissaoIso();
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
@@ -154,19 +173,25 @@ service firebase.storage {
     }
 
     match /empresas/{empresaId}/documentos-empresa/{allPaths=**} {
-      allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (
+        minhaEmpresa() == empresaId
+        && (temPermissao("arquivos_recebidos") || temPermissaoIso())
+      );
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
     match /empresas/{empresaId}/consultoria/{allPaths=**} {
-      allow read: if souAdmin() || (temAlgumaPermissao(["arquivos_recebidos", "estrutura_iso"]) && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (
+        minhaEmpresa() == empresaId
+        && (temPermissao("arquivos_recebidos") || temPermissaoIso())
+      );
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
 
     match /empresas/{empresaId}/{requisitoId}/evidencias/{allPaths=**} {
-      allow read: if souAdmin() || (temPermissao("estrutura_iso") && minhaEmpresa() == empresaId);
+      allow read: if souAdmin() || (temPermissaoIso() && minhaEmpresa() == empresaId);
       allow create, update: if uploadPermitido();
       allow delete: if souAdmin();
     }
