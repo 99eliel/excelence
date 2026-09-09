@@ -263,10 +263,21 @@
     }
   }
 
+  function watchDynamicPdfLibrary(node) {
+    if (node?.nodeType !== 1 || node.tagName !== 'SCRIPT') return;
+    const src = String(node.getAttribute('src') || '');
+    if (!/jspdf/i.test(src)) return;
+    node.addEventListener('load', () => {
+      patchJsPdf();
+      preparePdfLogo();
+    });
+  }
+
   function normalizeDocument() {
     document.title = `${BRAND_NAME} | ${COMPANY_NAME}`;
     normalizeTree(document, document);
     document.querySelectorAll('iframe').forEach(normalizeFrame);
+    document.querySelectorAll('script[src*="jspdf" i]').forEach(watchDynamicPdfLibrary);
     patchJsPdf();
   }
 
@@ -274,6 +285,7 @@
     for (const mutation of mutations) {
       mutation.addedNodes.forEach(node => {
         if (node.nodeType === 1 && node.tagName === 'IFRAME') normalizeFrame(node);
+        if (node.nodeType === 1 && node.tagName === 'SCRIPT') watchDynamicPdfLibrary(node);
         if (node.nodeType === 1) normalizeTree(node, document);
         if (node.nodeType === 3) {
           const before = node.nodeValue || '';
