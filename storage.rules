@@ -63,6 +63,8 @@ service firebase.storage {
       return request.resource.contentType == "application/pdf"
         || request.resource.contentType == "application/msword"
         || request.resource.contentType == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        || request.resource.contentType == "application/vnd.ms-excel"
+        || request.resource.contentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         || request.resource.contentType == "application/octet-stream";
     }
 
@@ -98,7 +100,8 @@ service firebase.storage {
         && firestore.get(recursoPath(recursoId)).data.clientePodeEditar == true
         && (
           (tipo == "pdf" && firestore.get(recursoPath(recursoId)).data.clientePermitePdf == true) ||
-          (tipo == "word" && firestore.get(recursoPath(recursoId)).data.clientePermiteWord == true)
+          (tipo == "word" && firestore.get(recursoPath(recursoId)).data.clientePermiteWord == true) ||
+          (tipo == "excel" && firestore.get(recursoPath(recursoId)).data.clientePermiteExcel == true)
         );
     }
 
