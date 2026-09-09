@@ -15,6 +15,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/convites_acesso/$(email);
     }
 
+    function empresaPath(empresaId) {
+      return /databases/$(database)/documents/empresas/$(empresaId);
+    }
+
     function temPerfil() {
       return logado() && exists(usuarioPath(request.auth.uid));
     }
@@ -59,6 +63,21 @@ service cloud.firestore {
       );
     }
 
+    function isoAtivaParaMinhaEmpresa() {
+      return souAdmin() || (
+        souCliente()
+        && exists(empresaPath(minhaEmpresa()))
+        && (
+          !get(empresaPath(minhaEmpresa())).data.keys().hasAny(["isoAtiva"])
+          || get(empresaPath(minhaEmpresa())).data.isoAtiva == true
+        )
+      );
+    }
+
+    function temPermissaoIso() {
+      return temPermissao("estrutura_iso") && isoAtivaParaMinhaEmpresa();
+    }
+
     function podeAtivarPerfilPorConvite(userId) {
       return logado()
         && request.auth.uid == userId
@@ -79,6 +98,9 @@ service cloud.firestore {
         "clienteWordUrl",
         "clienteWordNome",
         "clienteWordStoragePath",
+        "clienteExcelUrl",
+        "clienteExcelNome",
+        "clienteExcelStoragePath",
         "clienteLinkUrl",
         "clienteStatus",
         "clienteAtualizadoEm",
@@ -95,6 +117,7 @@ service cloud.firestore {
         && request.resource.data.clienteAtualizadoPor == request.auth.uid
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clientePdfUrl", "clientePdfNome", "clientePdfStoragePath"]) || resource.data.clientePermitePdf == true)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clienteWordUrl", "clienteWordNome", "clienteWordStoragePath"]) || resource.data.clientePermiteWord == true)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clienteExcelUrl", "clienteExcelNome", "clienteExcelStoragePath"]) || resource.data.clientePermiteExcel == true)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(["clienteLinkUrl"]) || resource.data.clientePermiteLink == true);
     }
 
@@ -118,23 +141,23 @@ service cloud.firestore {
 
     match /respostas_iso/{respostaId} {
       allow get: if souAdmin() || (
-        temPermissao("estrutura_iso")
+        temPermissaoIso()
         && respostaId.matches('^' + minhaEmpresa() + '_.*$')
       );
 
       allow list: if souAdmin() || (
-        temPermissao("estrutura_iso")
+        temPermissaoIso()
         && resource.data.empresaId == minhaEmpresa()
       );
 
       allow create: if souAdmin() || (
-        temPermissao("estrutura_iso")
+        temPermissaoIso()
         && request.resource.data.empresaId == minhaEmpresa()
         && request.resource.data.requisitoId in ["4_1", "4_2"]
       );
 
       allow update: if souAdmin() || (
-        temPermissao("estrutura_iso")
+        temPermissaoIso()
         && resource.data.empresaId == minhaEmpresa()
         && request.resource.data.empresaId == minhaEmpresa()
         && request.resource.data.requisitoId in ["4_1", "4_2"]
@@ -203,7 +226,6 @@ service cloud.firestore {
       );
     }
 
-    // Gestão de treinamentos e competências. Usuários liberados trabalham apenas na própria empresa.
     match /empresa_treinamentos/{registroId} {
       allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
