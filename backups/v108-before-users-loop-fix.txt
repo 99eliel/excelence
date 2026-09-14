@@ -1,0 +1,4 @@
+Ponto de retorno antes da correção da tela Usuários.
+Versão: 20260914-108
+Commit estável de referência: 3afb3d1523631aaeb741f2dfdccba6143d748476
+Motivo do backup: corrigir loop de MutationObserver em admin-user-create.js que podia travar a tela Usuários.
