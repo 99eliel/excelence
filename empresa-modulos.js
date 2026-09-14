@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const VERSION = '20260908-105';
+const VERSION = '20260914-107';
 const cache = new Map();
 const state = { perfil: null, busy: false, timer: null };
 
@@ -61,7 +61,8 @@ function ensureStyle() {
     .empresa-module-control strong{display:block;color:#073F5A}.empresa-module-control small{display:block;color:#607788;margin-top:3px;max-width:680px}
     .empresa-module-status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;margin-bottom:6px;background:#e4f5e9;color:#24663b}.empresa-module-status.off{background:#fce8e6;color:#992c25}
     .empresa-module-toggle{border:0;border-radius:11px;padding:10px 13px;font-weight:900;cursor:pointer;background:#073F5A;color:#fff}.empresa-module-toggle.off{background:#8f2d28}.empresa-module-toggle:disabled{opacity:.55;cursor:not-allowed}
-    .area-card.iso-disabled-for-client{border-style:dashed}.area-card.iso-disabled-for-client>.kicker:after{content:' • facultativa/desativada para o cliente';color:#9a4a42}
+    .empresa-module-reactivate{margin:14px 0 18px;border:1px dashed #bfd4dd;border-radius:14px;padding:11px 13px;background:#f8fbfc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#55717e}
+    .empresa-module-reactivate strong{display:block;color:#073F5A;font-size:13px}.empresa-module-reactivate small{display:block;margin-top:2px;color:#6a818c}.empresa-module-reactivate .empresa-module-toggle{padding:8px 12px;font-size:12px}
   `;
   document.head.appendChild(style);
 }
@@ -73,17 +74,69 @@ function findIsoAdminCard() {
   });
 }
 
+function findReactivationPanel(empresaId) {
+  return Array.from(document.querySelectorAll('[data-empresa-iso-reactivate]'))
+    .find(el => el.dataset.empresaIsoReactivate === empresaId) || null;
+}
+
+function removeReactivationPanel(empresaId) {
+  findReactivationPanel(empresaId)?.remove();
+}
+
+function ensureReactivationPanel(empresaId, card) {
+  let panel = findReactivationPanel(empresaId);
+  if (!panel) {
+    panel = document.createElement('section');
+    panel.className = 'empresa-module-reactivate';
+    panel.dataset.empresaIsoReactivate = empresaId;
+    const grid = card?.closest('.grid') || card?.parentElement;
+    if (grid?.parentElement) grid.insertAdjacentElement('afterend', panel);
+    else document.querySelector('.main')?.appendChild(panel);
+  }
+  panel.innerHTML = `
+    <div>
+      <strong>ISO 9001:2015 desativada nesta empresa</strong>
+      <small>O módulo foi retirado das opções da empresa. Os dados continuam preservados.</small>
+    </div>
+    <button class="empresa-module-toggle" type="button" data-toggle-empresa-iso="${empresaId}">Ativar ISO</button>`;
+}
+
+function syncAdminIsoShortcuts(enabled) {
+  ['abrirIsoEmpresa', 'abrirIsoPeloEcossistema'].forEach(id => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    button.hidden = !enabled;
+    button.style.display = enabled ? '' : 'none';
+    button.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+  });
+}
+
 async function enhanceAdmin() {
   if (!isAdmin()) return;
   const empresaId = currentAdminEmpresaId();
   if (!empresaId) return;
-  const card = findIsoAdminCard();
-  if (!card) return;
 
   const empresa = await getEmpresa(empresaId);
   if (!empresa) return;
   const enabled = isoAtiva(empresa);
-  card.classList.toggle('iso-disabled-for-client', !enabled);
+  syncAdminIsoShortcuts(enabled);
+
+  const card = findIsoAdminCard();
+  if (!card) return;
+
+  if (!enabled) {
+    card.hidden = true;
+    card.style.display = 'none';
+    card.setAttribute('aria-hidden', 'true');
+    card.querySelector('[data-empresa-iso-control]')?.remove();
+    ensureReactivationPanel(empresaId, card);
+    return;
+  }
+
+  card.hidden = false;
+  card.style.display = '';
+  card.setAttribute('aria-hidden', 'false');
+  removeReactivationPanel(empresaId);
 
   let box = card.querySelector('[data-empresa-iso-control]');
   if (!box) {
@@ -95,11 +148,11 @@ async function enhanceAdmin() {
 
   box.innerHTML = `
     <div>
-      <span class="empresa-module-status ${enabled ? '' : 'off'}">${enabled ? 'Ativada para a empresa' : 'Desativada para a empresa'}</span>
+      <span class="empresa-module-status">Ativada para a empresa</span>
       <strong>ISO 9001:2015 é facultativa</strong>
-      <small>Quando desativada, usuários desta empresa não veem a ISO, o diagnóstico nem pendências ISO. Os dados já existentes são preservados e reaparecem se você ativar novamente.</small>
+      <small>Ao desativar, o módulo ISO some das opções da empresa e dos usuários. Os dados existentes são preservados.</small>
     </div>
-    <button class="empresa-module-toggle ${enabled ? 'off' : ''}" type="button" data-toggle-empresa-iso="${empresaId}">${enabled ? 'Desativar ISO' : 'Ativar ISO'}</button>`;
+    <button class="empresa-module-toggle off" type="button" data-toggle-empresa-iso="${empresaId}">Desativar ISO</button>`;
 }
 
 async function toggleIso(empresaId, button) {
@@ -118,7 +171,7 @@ async function toggleIso(empresaId, button) {
       isoAtualizadoPor: auth.currentUser?.uid || ''
     });
     cache.set(empresaId, { ...empresa, isoAtiva: next });
-    toast(next ? 'ISO ativada para esta empresa.' : 'ISO desativada para esta empresa. Os dados foram preservados.');
+    toast(next ? 'ISO ativada para esta empresa.' : 'ISO desativada. O módulo foi retirado das opções da empresa.');
     await enhanceAdmin();
   } catch (error) {
     toast(error?.message || 'Não foi possível alterar a configuração da ISO.', true);
@@ -217,6 +270,7 @@ document.addEventListener('click', event => {
   if (toggle) {
     event.preventDefault();
     event.stopPropagation();
+    event.stopImmediatePropagation();
     toggleIso(toggle.dataset.toggleEmpresaIso, toggle);
     return;
   }
