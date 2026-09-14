@@ -1,8 +1,9 @@
 import { functions } from './firebase-config.js';
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-functions.js";
 
-const VERSION = '20260914-108';
+const VERSION = '20260914-109';
 const cadastrarUsuarioAdmin = httpsCallable(functions, 'cadastrarUsuarioAdmin', { timeout: 30000 });
+let enhanceTimer = null;
 
 function toast(message, error = false) {
   document.querySelector('[data-admin-create-toast]')?.remove();
@@ -27,7 +28,7 @@ function readableError(error) {
   if (code.includes('failed-precondition')) return message || 'O Firebase ainda não está preparado para concluir este cadastro.';
   if (code.includes('deadline-exceeded')) return 'O cadastro demorou mais que o esperado. Tente novamente em alguns segundos.';
   if (code.includes('unavailable')) return 'Serviço temporariamente indisponível. Tente novamente.';
-  if (code.includes('internal')) return message || 'O servidor não conseguiu concluir o cadastro. A v108 separa o acesso direto dos convites antigos; confira se a função nova foi publicada.';
+  if (code.includes('internal')) return message || 'O servidor não conseguiu concluir o cadastro. Confira se a função cadastrarUsuarioAdmin está publicada.';
   return message || 'Não foi possível cadastrar o usuário.';
 }
 
@@ -78,15 +79,37 @@ function enhanceManagementCopy() {
   const management = [...document.querySelectorAll('section.card')].find(section => {
     return String(section.querySelector('h2')?.textContent || '').trim().toLowerCase() === 'gerenciamento';
   });
-  if (!management) return;
+  if (!management || management.dataset.adminCreateCopy === VERSION) return;
 
+  management.dataset.adminCreateCopy = VERSION;
   const description = management.querySelector('h2 + p');
-  if (description) description.textContent = 'Gerencie usuários, bloqueie acessos, troque a empresa vinculada e altere senhas quando necessário.';
+  const descriptionText = 'Gerencie usuários, bloqueie acessos, troque a empresa vinculada e altere senhas quando necessário.';
+  if (description && description.textContent !== descriptionText) description.textContent = descriptionText;
 
   const notice = management.querySelector('.notice');
-  if (notice) {
-    notice.innerHTML = '<strong>Acesso direto:</strong> ao cadastrar um usuário, o e-mail e a senha definidos pelo administrador já ficam válidos imediatamente no Firebase Authentication. A alteração de senha também pode ser feita diretamente pelo administrador.';
-  }
+  const noticeHtml = '<strong>Acesso direto:</strong> ao cadastrar um usuário, o e-mail e a senha definidos pelo administrador já ficam válidos imediatamente no Firebase Authentication. A alteração de senha também pode ser feita diretamente pelo administrador.';
+  if (notice && notice.innerHTML !== noticeHtml) notice.innerHTML = noticeHtml;
+}
+
+function enhancePendingSection() {
+  const pendingSection = [...document.querySelectorAll('section.card')].find(section => {
+    const title = section.querySelector('h2');
+    const text = String(title?.textContent || '').toLowerCase();
+    return text.includes('convites e acessos pendentes') || text.includes('cadastros antigos incompletos');
+  });
+  if (!pendingSection || pendingSection.dataset.adminCreatePending === VERSION) return;
+
+  pendingSection.dataset.adminCreatePending = VERSION;
+  const title = pendingSection.querySelector('h2');
+  if (title && title.textContent !== 'Cadastros antigos incompletos') title.textContent = 'Cadastros antigos incompletos';
+
+  const description = pendingSection.querySelector('p.muted');
+  const descriptionText = 'Somente registros antigos podem aparecer aqui. Cadastros novos já saem prontos para login e não passam por convite.';
+  if (description && description.textContent !== descriptionText) description.textContent = descriptionText;
+
+  pendingSection.querySelectorAll('.badge.orange').forEach(badge => {
+    if (String(badge.textContent || '').trim() === 'Aguardando login') badge.textContent = 'Cadastro antigo incompleto';
+  });
 }
 
 function enhanceForm() {
@@ -96,34 +119,24 @@ function enhanceForm() {
 
     const password = form.querySelector('input[name="senha"]');
     const label = password?.closest('.form-group')?.querySelector('label');
-    if (label) label.textContent = 'Senha de acesso';
+    if (label && label.textContent !== 'Senha de acesso') label.textContent = 'Senha de acesso';
 
     const intro = form.querySelector('.section-title-row p');
-    if (intro) intro.textContent = 'Ao salvar, o Firebase cria ou atualiza a conta e o perfil na mesma operação. O usuário entra imediatamente com este e-mail e esta senha.';
+    const introText = 'Ao salvar, o Firebase cria ou atualiza a conta e o perfil na mesma operação. O usuário entra imediatamente com este e-mail e esta senha.';
+    if (intro && intro.textContent !== introText) intro.textContent = introText;
 
     const submit = form.querySelector('button[type="submit"]');
-    if (submit) submit.textContent = 'Criar acesso';
+    if (submit && submit.textContent !== 'Criar acesso') submit.textContent = 'Criar acesso';
   }
 
   document.querySelectorAll('[data-activate-invite]').forEach(button => button.remove());
   enhanceManagementCopy();
+  enhancePendingSection();
+}
 
-  const pendingSection = [...document.querySelectorAll('section.card')].find(section => {
-    const title = section.querySelector('h2');
-    return String(title?.textContent || '').toLowerCase().includes('convites e acessos pendentes')
-      || String(title?.textContent || '').toLowerCase().includes('cadastros antigos incompletos');
-  });
-
-  if (pendingSection) {
-    const title = pendingSection.querySelector('h2');
-    if (title) title.textContent = 'Cadastros antigos incompletos';
-    const description = pendingSection.querySelector('p.muted');
-    if (description) description.textContent = 'Somente registros antigos podem aparecer aqui. Cadastros feitos a partir da v108 já saem prontos para login e não passam por convite.';
-
-    pendingSection.querySelectorAll('.badge.orange').forEach(badge => {
-      if (String(badge.textContent || '').trim() === 'Aguardando login') badge.textContent = 'Cadastro antigo incompleto';
-    });
-  }
+function scheduleEnhance() {
+  clearTimeout(enhanceTimer);
+  enhanceTimer = setTimeout(enhanceForm, 60);
 }
 
 document.addEventListener('submit', event => {
@@ -140,7 +153,7 @@ document.addEventListener('submit', event => {
   });
 }, true);
 
-const observer = new MutationObserver(() => enhanceForm());
+const observer = new MutationObserver(scheduleEnhance);
 observer.observe(document.documentElement, { childList: true, subtree: true });
 enhanceForm();
 console.info(`Excellence System • cadastro direto de usuários ${VERSION} carregado.`);
