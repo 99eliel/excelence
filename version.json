@@ -1,7 +1,7 @@
 {
-  "version": "20260914-106",
+  "version": "20260914-107",
   "name": "Excellence System",
   "updatedAt": "2026-09-14",
-  "message": "Relatórios de produção separados do Apontamento e carga de treinamento por funcionário.",
-  "notes": "A aba antiga de relatórios do Apontamento foi desmembrada em uma área própria no menu. A nova área traz filtros, peças/minuto e minutos/peça com 4 casas decimais, comparação com período anterior ou marco zero, cálculo automático de evolução percentual, gráfico de evolução, gráfico de produto por minuto, gráfico de volume e exportação individual dos gráficos em PNG, com ajuste da quantidade de pontos/barras exibidos. Em Funcionários, o administrador agora define as horas de treinamento previstas; a ficha e o relatório individual calculam horas realizadas/abatidas, horas restantes ou excedentes e percentual de progresso. Um ponto de retorno completo da v105 foi registrado antes das alterações."
+  "message": "Módulo ISO agora desaparece das opções da empresa quando desativado.",
+  "notes": "Ao desativar a ISO 9001:2015 em uma empresa, o card principal de Gestão ISO e os atalhos de acesso são removidos imediatamente das opções daquela empresa. Os dados continuam preservados. Para permitir reativação sem poluir a tela, fica somente uma faixa compacta de módulo desativado com o botão Ativar ISO. Um ponto de retorno completo da v106 foi registrado antes da alteração."
 }
