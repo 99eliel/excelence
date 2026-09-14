@@ -1,7 +1,7 @@
 {
-  "version": "20260908-105",
+  "version": "20260914-106",
   "name": "Excellence System",
-  "updatedAt": "2026-09-08",
-  "message": "ISO facultativa por empresa, Excel nos documentos e relatórios com identidade padronizada.",
-  "notes": "A referência exibida da ISO foi padronizada como ISO 9001:2015. A Gestão ISO agora pode ser ativada ou desativada individualmente dentro de cada empresa; quando desativada, usuários da empresa deixam de ver e acessar a ISO, mas os dados existentes são preservados. O Ecossistema documental e os envios liberados para clientes agora aceitam Excel XLS/XLSX com campos e permissões próprios, incluindo limpeza de arquivos ao excluir itens ou pastas. A identidade dos relatórios foi centralizada: o símbolo ® é removido dos textos dos relatórios, enquanto a logo registrada da MP Consultoria permanece e é aplicada em relatórios impressos, janelas, iframes e PDFs gerados pelo sistema. Um ponto de retorno completo da v104 foi registrado antes da alteração."
+  "updatedAt": "2026-09-14",
+  "message": "Relatórios de produção separados do Apontamento e carga de treinamento por funcionário.",
+  "notes": "A aba antiga de relatórios do Apontamento foi desmembrada em uma área própria no menu. A nova área traz filtros, peças/minuto e minutos/peça com 4 casas decimais, comparação com período anterior ou marco zero, cálculo automático de evolução percentual, gráfico de evolução, gráfico de produto por minuto, gráfico de volume e exportação individual dos gráficos em PNG, com ajuste da quantidade de pontos/barras exibidos. Em Funcionários, o administrador agora define as horas de treinamento previstas; a ficha e o relatório individual calculam horas realizadas/abatidas, horas restantes ou excedentes e percentual de progresso. Um ponto de retorno completo da v105 foi registrado antes das alterações."
 }
