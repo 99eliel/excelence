@@ -1,7 +1,7 @@
 {
-  "version": "20260914-107",
+  "version": "20260914-108",
   "name": "Excellence System",
   "updatedAt": "2026-09-14",
-  "message": "Módulo ISO agora desaparece das opções da empresa quando desativado.",
-  "notes": "Ao desativar a ISO 9001:2015 em uma empresa, o card principal de Gestão ISO e os atalhos de acesso são removidos imediatamente das opções daquela empresa. Os dados continuam preservados. Para permitir reativação sem poluir a tela, fica somente uma faixa compacta de módulo desativado com o botão Ativar ISO. Um ponto de retorno completo da v106 foi registrado antes da alteração."
+  "message": "Cadastro administrativo de usuários agora é direto e independente de convites.",
+  "notes": "O cadastro de usuário foi simplificado para a regra definitiva: o administrador informa nome, e-mail, senha, tipo e empresa; a Cloud Function cria ou atualiza a conta diretamente no Firebase Authentication, aplica a senha informada, habilita o acesso e grava o perfil em usuarios. Convites antigos não participam mais da operação principal e são apenas limpos posteriormente, sem bloquear o cadastro. Se uma conta nova for criada no Authentication mas o perfil não puder ser salvo, a função desfaz a conta para não deixar registros pela metade. As mensagens de erro foram melhoradas e o aviso antigo de redefinição por e-mail foi substituído pela informação de alteração direta pelo administrador. Um ponto de retorno completo da v107 foi registrado antes da alteração."
 }
