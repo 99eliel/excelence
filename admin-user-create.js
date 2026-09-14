@@ -1,28 +1,33 @@
 import { functions } from './firebase-config.js';
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-functions.js";
 
-const VERSION = '20260908-104';
-const cadastrarUsuarioAdmin = httpsCallable(functions, 'cadastrarUsuarioAdmin');
+const VERSION = '20260914-108';
+const cadastrarUsuarioAdmin = httpsCallable(functions, 'cadastrarUsuarioAdmin', { timeout: 30000 });
 
 function toast(message, error = false) {
   document.querySelector('[data-admin-create-toast]')?.remove();
   const el = document.createElement('div');
   el.dataset.adminCreateToast = '1';
   el.textContent = message;
-  el.style.cssText = `position:fixed;right:18px;bottom:18px;z-index:130000;max-width:520px;padding:12px 15px;border-radius:13px;color:#fff;font-weight:850;background:${error ? '#9f2e2e' : '#073F5A'};box-shadow:0 18px 42px rgba(5,36,55,.25)`;
+  el.style.cssText = `position:fixed;right:18px;bottom:18px;z-index:130000;max-width:560px;padding:12px 15px;border-radius:13px;color:#fff;font-weight:850;background:${error ? '#9f2e2e' : '#073F5A'};box-shadow:0 18px 42px rgba(5,36,55,.25)`;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 4600);
+  setTimeout(() => el.remove(), error ? 6500 : 4600);
 }
 
 function readableError(error) {
   const code = String(error?.code || '');
-  const message = String(error?.message || '').replace(/^FirebaseError:\s*/i, '');
+  const rawMessage = String(error?.message || '').replace(/^FirebaseError:\s*/i, '').trim();
+  const message = rawMessage && !['internal', 'INTERNAL'].includes(rawMessage) ? rawMessage : '';
+
   if (code.includes('unauthenticated')) return 'Sua sessão expirou. Faça login novamente.';
   if (code.includes('permission-denied')) return 'Somente um administrador ativo pode cadastrar usuários.';
-  if (code.includes('invalid-argument')) return message || 'Confira os dados do usuário.';
+  if (code.includes('invalid-argument')) return message || 'Confira o e-mail e a senha informados.';
   if (code.includes('not-found')) return message || 'A empresa selecionada não foi encontrada.';
-  if (code.includes('already-exists')) return message || 'Este e-mail já possui um acesso. Tente salvar novamente.';
+  if (code.includes('already-exists')) return message || 'Este e-mail já existe. Salve novamente para atualizar a senha e concluir o perfil.';
+  if (code.includes('failed-precondition')) return message || 'O Firebase ainda não está preparado para concluir este cadastro.';
+  if (code.includes('deadline-exceeded')) return 'O cadastro demorou mais que o esperado. Tente novamente em alguns segundos.';
   if (code.includes('unavailable')) return 'Serviço temporariamente indisponível. Tente novamente.';
+  if (code.includes('internal')) return message || 'O servidor não conseguiu concluir o cadastro. A v108 separa o acesso direto dos convites antigos; confira se a função nova foi publicada.';
   return message || 'Não foi possível cadastrar o usuário.';
 }
 
@@ -46,7 +51,7 @@ async function handleCreate(form, submitButton) {
   if (senha.length < 6) throw new Error('A senha precisa ter pelo menos 6 caracteres.');
   if (tipo === 'cliente' && !empresaId) throw new Error('Selecione a empresa do cliente.');
 
-  const oldText = submitButton?.textContent || 'Criar usuário';
+  const oldText = submitButton?.textContent || 'Criar acesso';
   if (submitButton) {
     submitButton.disabled = true;
     submitButton.textContent = 'Criando acesso...';
@@ -54,16 +59,33 @@ async function handleCreate(form, submitButton) {
 
   try {
     const result = await cadastrarUsuarioAdmin({ nome, email, senha, tipo, empresaId });
-    if (result?.data?.readyToLogin !== true) throw new Error('O servidor não confirmou o acesso para login.');
+    if (result?.data?.readyToLogin !== true || !result?.data?.userId) {
+      throw new Error('O servidor não confirmou o acesso para login.');
+    }
 
     form.reset();
-    toast('Usuário salvo com sucesso. O e-mail e a senha definidos já podem ser usados para entrar agora.');
+    toast(`Acesso de ${email} criado com sucesso. Este e-mail e a senha definida já podem ser usados para entrar agora.`);
     refreshUsersView();
   } finally {
     if (submitButton) {
       submitButton.disabled = false;
       submitButton.textContent = oldText;
     }
+  }
+}
+
+function enhanceManagementCopy() {
+  const management = [...document.querySelectorAll('section.card')].find(section => {
+    return String(section.querySelector('h2')?.textContent || '').trim().toLowerCase() === 'gerenciamento';
+  });
+  if (!management) return;
+
+  const description = management.querySelector('h2 + p');
+  if (description) description.textContent = 'Gerencie usuários, bloqueie acessos, troque a empresa vinculada e altere senhas quando necessário.';
+
+  const notice = management.querySelector('.notice');
+  if (notice) {
+    notice.innerHTML = '<strong>Acesso direto:</strong> ao cadastrar um usuário, o e-mail e a senha definidos pelo administrador já ficam válidos imediatamente no Firebase Authentication. A alteração de senha também pode ser feita diretamente pelo administrador.';
   }
 }
 
@@ -77,24 +99,26 @@ function enhanceForm() {
     if (label) label.textContent = 'Senha de acesso';
 
     const intro = form.querySelector('.section-title-row p');
-    if (intro) intro.textContent = 'Ao salvar, o acesso já fica pronto. O usuário entra imediatamente com este e-mail e esta senha, sem ativação posterior.';
+    if (intro) intro.textContent = 'Ao salvar, o Firebase cria ou atualiza a conta e o perfil na mesma operação. O usuário entra imediatamente com este e-mail e esta senha.';
 
     const submit = form.querySelector('button[type="submit"]');
     if (submit) submit.textContent = 'Criar acesso';
   }
 
   document.querySelectorAll('[data-activate-invite]').forEach(button => button.remove());
+  enhanceManagementCopy();
 
   const pendingSection = [...document.querySelectorAll('section.card')].find(section => {
     const title = section.querySelector('h2');
-    return String(title?.textContent || '').toLowerCase().includes('convites e acessos pendentes');
+    return String(title?.textContent || '').toLowerCase().includes('convites e acessos pendentes')
+      || String(title?.textContent || '').toLowerCase().includes('cadastros antigos incompletos');
   });
 
   if (pendingSection) {
     const title = pendingSection.querySelector('h2');
     if (title) title.textContent = 'Cadastros antigos incompletos';
     const description = pendingSection.querySelector('p.muted');
-    if (description) description.textContent = 'Esta lista é apenas de cadastros antigos que ficaram incompletos. Para corrigir um deles, cadastre novamente o mesmo e-mail acima e defina a senha desejada; o acesso será concluído imediatamente.';
+    if (description) description.textContent = 'Somente registros antigos podem aparecer aqui. Cadastros feitos a partir da v108 já saem prontos para login e não passam por convite.';
 
     pendingSection.querySelectorAll('.badge.orange').forEach(badge => {
       if (String(badge.textContent || '').trim() === 'Aguardando login') badge.textContent = 'Cadastro antigo incompleto';
