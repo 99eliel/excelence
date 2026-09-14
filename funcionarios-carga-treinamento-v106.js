@@ -91,8 +91,8 @@ function trainingTotals(employee,matrix,plans) {
     return sum+workloadForRow(row,planMap);
   },0);
   const planned=Math.max(0,Number(employee.horasTreinamentoPrevistas||0));
-  const remaining=Math.max(0,planned-realized);
-  const excess=Math.max(0,realized-planned);
+  const remaining=planned>0?Math.max(0,planned-realized):0;
+  const excess=planned>0?Math.max(0,realized-planned):0;
   const progress=planned>0?(realized/planned)*100:null;
   return {rows,performed,planMap,planned,realized,remaining,excess,progress};
 }
@@ -171,9 +171,9 @@ async function enhanceProfile(modal) {
     const grid=modal.querySelector('.emp-profile-grid');if(!grid)return;
     const progress=t.progress==null?0:Math.min(100,t.progress);
     grid.insertAdjacentHTML('beforeend',`
-      <div class="emp-info emp-hours-highlight"><small>Horas previstas</small><strong>${hoursLabel(t.planned)}</strong></div>
+      <div class="emp-info emp-hours-highlight"><small>Horas previstas</small><strong>${t.planned>0?hoursLabel(t.planned):'Não definida'}</strong></div>
       <div class="emp-info emp-hours-highlight"><small>Horas realizadas / abatidas</small><strong>${hoursLabel(t.realized)}</strong></div>
-      <div class="emp-info emp-hours-highlight"><small>Saldo de treinamento</small><strong>${t.excess>0?`${hoursLabel(t.excess)} excedentes`:hoursLabel(t.remaining)}</strong>${t.planned>0?`<div class="emp-hours-progress"><i style="width:${progress.toFixed(2)}%"></i></div>`:''}</div>`);
+      <div class="emp-info emp-hours-highlight"><small>Saldo de treinamento</small><strong>${t.planned<=0?'Defina a meta':t.excess>0?`${hoursLabel(t.excess)} excedentes`:hoursLabel(t.remaining)}</strong>${t.planned>0?`<div class="emp-hours-progress"><i style="width:${progress.toFixed(2)}%"></i></div>`:''}</div>`);
   }catch(e){console.warn('Resumo de horas de treinamento indisponível:',e)}
 }
 
@@ -199,6 +199,8 @@ function reportHTML(data) {
     return `<tr><td><strong>${esc(row.treinamentoNome||plan.titulo||'Treinamento')}</strong></td><td>${esc(dateBr(row.ultimaRealizacaoData))}</td><td>${esc(hoursLabel(h))}</td><td>${esc(plan.instrutor||'-')}</td><td>${esc(row.status||'Realizado')}</td><td>${esc(row.eficaciaStatus||'Pendente')}</td><td>${esc(row.eficaciaAvaliador||'-')}</td></tr>`;
   }).join(''):'<tr><td colspan="7" class="empty">Nenhum treinamento realizado registrado.</td></tr>';
   const p=progress==null?0:Math.min(100,progress);
+  const balanceLabel=planned<=0?'Meta não definida':excess>0?'Horas excedentes':'Horas restantes';
+  const balanceValue=planned<=0?'—':hoursLabel(excess>0?excess:remaining);
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório individual - ${esc(employee.nome||'Funcionário')}</title><style>
     *{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#183847;margin:0;font-size:11px}.page{width:100%}.header{background:linear-gradient(135deg,#073F5A,#0b607f);color:#fff;border-radius:14px;padding:14px 16px;display:grid;grid-template-columns:62px 1fr auto;gap:13px;align-items:center}.logo{width:60px;height:60px;object-fit:contain;background:#fff;border-radius:12px;padding:4px}.brand small{display:block;font-size:9px;font-weight:700;letter-spacing:.1em;color:#d5e9ef}.brand h1{margin:3px 0;font-size:20px;color:#fff}.brand p{margin:0;color:#dcecf2}.meta{text-align:right;font-size:9px;color:#dcecf2}.meta strong{display:block;color:#fff;font-size:11px}
     .employee{margin-top:12px;border:1px solid #d7e5ea;border-radius:14px;padding:12px;display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center;background:#fbfdfe}.photo{width:92px;height:112px;border-radius:14px;overflow:hidden;background:#e9f2f5;display:grid;place-items:center;color:#073F5A;font-size:26px;font-weight:800}.photo img{width:100%;height:100%;object-fit:cover}.employee h2{margin:0 0 8px;color:#073F5A;font-size:18px}.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.info{border:1px solid #e2eaee;border-radius:9px;padding:7px;background:#fff}.info span{display:block;font-size:8px;font-weight:700;text-transform:uppercase;color:#728791}.info strong{display:block;margin-top:3px;font-size:10px}
@@ -206,7 +208,7 @@ function reportHTML(data) {
     .section{margin-top:11px}.section-title{display:flex;justify-content:space-between;border-bottom:2px solid #073F5A;padding-bottom:5px;margin-bottom:7px}.section-title h3{margin:0;color:#073F5A;font-size:13px}.section-title span{font-size:9px;color:#657d88}table{width:100%;border-collapse:collapse;table-layout:fixed}th,td{border-bottom:1px solid #e2eaee;padding:6px 5px;text-align:left;vertical-align:top;word-wrap:break-word}th{background:#f0f6f8;color:#496570;text-transform:uppercase;font-size:7.5px}td{font-size:9px}.empty{text-align:center;color:#71858e;padding:16px}.notes{border:1px solid #e1eaee;border-radius:10px;padding:8px;background:#fbfdfe;white-space:pre-wrap}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:34px;margin-top:24px}.signatures div{border-top:1px solid #78909a;padding-top:5px;text-align:center;color:#536c77;font-size:9px}.footer{margin-top:14px;padding-top:6px;border-top:1px solid #dfe8ec;display:flex;justify-content:space-between;color:#71858e;font-size:8px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px}.actions button{border:0;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer}.primary{background:#073F5A;color:#fff}.soft{background:#edf5f8;color:#073F5A}@page{size:A4 portrait;margin:9mm}@media print{.actions{display:none}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.header,.employee,.kpi,.section,tr{break-inside:avoid}}
   </style></head><body><div class="page"><div class="actions"><button class="primary" onclick="window.print()">Imprimir / salvar PDF</button><button class="soft" onclick="window.close()">Fechar</button></div><header class="header"><img class="logo" src="${esc(logo)}"><div class="brand"><small>EXCELLENCE SYSTEM • MP CONSULTORIA</small><h1>Relatório Individual de Capacitação</h1><p>${esc(company.nome||'Empresa')}</p></div><div class="meta"><strong>Ficha do funcionário</strong>Gerado em ${esc(generated)}</div></header>
   <section class="employee"><div class="photo">${employee.fotoUrl?`<img src="${esc(employee.fotoUrl)}">`:esc(initials(employee.nome))}</div><div><h2>${esc(employee.nome||'Funcionário')}</h2><div class="info-grid"><div class="info"><span>CPF</span><strong>${esc(cpfMask(employee.cpf)||'-')}</strong></div><div class="info"><span>Nascimento</span><strong>${esc(dateBr(employee.dataNascimento))}</strong></div><div class="info"><span>Admissão</span><strong>${esc(dateBr(employee.admissao))}</strong></div><div class="info"><span>Cargo / Função</span><strong>${esc(employee.cargo||employee.funcao||'-')}</strong></div><div class="info"><span>Setor</span><strong>${esc(employee.setor||'-')}</strong></div><div class="info"><span>Situação</span><strong>${employee.ativo===false?'Inativo':'Ativo'}</strong></div></div></div></section>
-  <section class="summary"><div class="kpi gold"><span>Horas previstas</span><strong>${hoursLabel(planned)}</strong><div class="progress"><i style="width:${p.toFixed(2)}%"></i></div></div><div class="kpi"><span>Horas realizadas / abatidas</span><strong>${hoursLabel(realized)}</strong></div><div class="kpi"><span>${excess>0?'Horas excedentes':'Horas restantes'}</span><strong>${hoursLabel(excess>0?excess:remaining)}</strong></div><div class="kpi"><span>Progresso da carga</span><strong>${progress==null?'—':`${progress.toLocaleString('pt-BR',{maximumFractionDigits:1})}%`}</strong></div></section>
+  <section class="summary"><div class="kpi gold"><span>Horas previstas</span><strong>${planned>0?hoursLabel(planned):'Não definida'}</strong>${planned>0?`<div class="progress"><i style="width:${p.toFixed(2)}%"></i></div>`:''}</div><div class="kpi"><span>Horas realizadas / abatidas</span><strong>${hoursLabel(realized)}</strong></div><div class="kpi"><span>${balanceLabel}</span><strong>${balanceValue}</strong></div><div class="kpi"><span>Progresso da carga</span><strong>${progress==null?'—':`${progress.toLocaleString('pt-BR',{maximumFractionDigits:1})}%`}</strong></div></section>
   <section class="summary"><div class="kpi"><span>Treinamentos vinculados</span><strong>${rows.length}</strong></div><div class="kpi"><span>Já realizados</span><strong>${performed.length}</strong></div><div class="kpi"><span>Concluídos</span><strong>${completed}</strong></div><div class="kpi"><span>Eficazes</span><strong>${effective}</strong></div></section>
   <section class="section"><div class="section-title"><h3>Treinamentos realizados</h3><span>A carga de cada treinamento abate a meta prevista.</span></div><table><thead><tr><th>Treinamento</th><th>Realização</th><th>Carga</th><th>Instrutor</th><th>Status</th><th>Eficácia</th><th>Avaliador</th></tr></thead><tbody>${trainingRows}</tbody></table></section>
   ${employee.observacoes?`<section class="section"><div class="section-title"><h3>Observações da ficha</h3></div><div class="notes">${esc(employee.observacoes)}</div></section>`:''}<div class="signatures"><div>Responsável por RH / Treinamentos</div><div>Responsável pela empresa</div></div><div class="footer"><span>Excellence System • MP Consultoria</span><span>${esc(generated)}</span></div></div><script>setTimeout(()=>window.print(),500)</script></body></html>`;
@@ -216,8 +218,9 @@ async function openEnhancedReport(modal,button) {
   const old=button.textContent;button.disabled=true;button.textContent='Gerando...';
   try{
     const data=await reportPayload(modal);
-    const w=window.open('','_blank','noopener,noreferrer,width=1100,height=820');
+    const w=window.open('','_blank','width=1100,height=820');
     if(!w)throw new Error('O navegador bloqueou a janela do relatório. Libere pop-ups para o sistema.');
+    try{w.opener=null}catch(_){}
     w.document.open();w.document.write(reportHTML(data));w.document.close();
   }catch(e){toast(e?.message||'Não foi possível gerar o relatório.',true)}finally{button.disabled=false;button.textContent=old}
 }
