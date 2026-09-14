@@ -226,6 +226,11 @@ service cloud.firestore {
       );
     }
 
+    match /apontamento_relatorio_config/{empresaId} {
+      allow read: if souAdmin() || (temPermissao("apontamento") && minhaEmpresa() == empresaId);
+      allow create, update, delete: if souAdmin();
+    }
+
     match /empresa_treinamentos/{registroId} {
       allow read: if souAdmin() || (temPermissao("treinamentos") && resource.data.empresaId == minhaEmpresa());
       allow create: if souAdmin() || (temPermissao("treinamentos") && request.resource.data.empresaId == minhaEmpresa());
