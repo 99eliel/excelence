@@ -1,0 +1,13 @@
+BACKUP / PONTO DE RETORNO
+
+Versão estável antes do pacote v106.
+Commit de referência: 3f293c8e6fb4a4a5d0f5a111c6845a00d4a70c41
+
+Este ponto preserva a v105 antes das alterações em:
+- Relatórios independentes do Apontamento;
+- gráficos com exportação em PNG e comparação;
+- indicador peças/minuto com 4 casas decimais;
+- gráfico de produto por minuto;
+- carga de treinamento prevista por funcionário e saldo no relatório individual.
+
+Para recuperação, retornar o repositório ao commit acima.
