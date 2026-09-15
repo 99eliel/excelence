@@ -1,7 +1,7 @@
 {
-  "version": "20260914-110",
+  "version": "20260914-111",
   "name": "Excellence System",
   "updatedAt": "2026-09-14",
-  "message": "Correção do login de clientes quando a ISO da empresa está desativada.",
-  "notes": "A autenticação do cliente já estava funcionando, porém a montagem inicial do painel ainda consultava os registros ISO 4.1 e 4.2. Quando a ISO estava desativada para a empresa, as regras bloqueavam essa leitura e o acesso não avançava. A v110 permite somente a leitura pontual dos dois registros iniciais da própria empresa para que o painel possa carregar; a ISO continua sem listagem, sem edição e sem aparecer nos módulos quando estiver desativada. Um ponto de retorno completo da v109 foi registrado antes da alteração."
+  "message": "Ícones da Central da Empresa foram reorganizados e padronizados.",
+  "notes": "Os cards de Documentos, Arquivos recebidos, Diário de bordo, Produção, Treinamentos e ISO agora usam ícones SVG próprios, maiores e alinhados em uma estrutura uniforme. Os cards ganharam altura consistente, melhor espaçamento, badge de indicador organizado no topo e responsividade preservada. Nenhuma lógica de acesso ou dados foi alterada. A v110 permanece como ponto de retorno no commit 382cde5821796def20c93f450266ffebf2512d2f."
 }
