@@ -1,7 +1,7 @@
 {
-  "version": "20260914-111",
+  "version": "20260914-112",
   "name": "Excellence System",
   "updatedAt": "2026-09-14",
-  "message": "Ícones da Central da Empresa foram reorganizados e padronizados.",
-  "notes": "Os cards de Documentos, Arquivos recebidos, Diário de bordo, Produção, Treinamentos e ISO agora usam ícones SVG próprios, maiores e alinhados em uma estrutura uniforme. Os cards ganharam altura consistente, melhor espaçamento, badge de indicador organizado no topo e responsividade preservada. Nenhuma lógica de acesso ou dados foi alterada. A v110 permanece como ponto de retorno no commit 382cde5821796def20c93f450266ffebf2512d2f."
+  "message": "Correção visual da ISO desativada na navegação do cliente.",
+  "notes": "Quando a ISO da empresa está desativada, o estado do módulo agora é aplicado ao documento antes da barra lateral ser remontada. Com isso, Estrutura ISO não aparece nem por um instante durante a troca entre Ecossistema, Arquivos recebidos, Diário de bordo, Treinamentos, Apontamento e Relatórios. O estado fica como pending durante a identificação do cliente e só libera a ISO quando a empresa estiver realmente com o módulo ativo. A v111 permanece como ponto de retorno no commit 33f816f454df66a60d3ca96fa895d9374be23d46."
 }
