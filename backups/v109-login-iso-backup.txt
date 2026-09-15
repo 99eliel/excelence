@@ -1,0 +1,7 @@
+Excellence System — ponto de retorno antes da correção de login com ISO facultativa.
+
+Versão: 20260914-109
+Commit principal preservado: 11a5371c40f7eb13abe5a662f95d1addc3ae0247
+Data: 2026-09-14
+
+Motivo do backup: antes de ajustar as regras para permitir que o carregamento inicial do cliente consulte somente os registros 4.1 e 4.2 da própria empresa mesmo quando o módulo ISO estiver desativado.
