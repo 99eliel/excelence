@@ -1,7 +1,7 @@
 {
-  "version": "20260914-109",
+  "version": "20260914-110",
   "name": "Excellence System",
   "updatedAt": "2026-09-14",
-  "message": "Correção da tela Usuários e estabilização do cadastro administrativo.",
-  "notes": "A tela Usuários podia travar ao abrir por causa de um ciclo de MutationObserver no módulo de cadastro administrativo. A v109 torna os ajustes da página idempotentes e aplica cada transformação apenas uma vez por renderização, evitando loops e mantendo o cadastro direto de e-mail e senha da v108. Um ponto de retorno completo da v108 foi registrado antes da alteração."
+  "message": "Correção do login de clientes quando a ISO da empresa está desativada.",
+  "notes": "A autenticação do cliente já estava funcionando, porém a montagem inicial do painel ainda consultava os registros ISO 4.1 e 4.2. Quando a ISO estava desativada para a empresa, as regras bloqueavam essa leitura e o acesso não avançava. A v110 permite somente a leitura pontual dos dois registros iniciais da própria empresa para que o painel possa carregar; a ISO continua sem listagem, sem edição e sem aparecer nos módulos quando estiver desativada. Um ponto de retorno completo da v109 foi registrado antes da alteração."
 }
