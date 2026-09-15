@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const VERSION = '20260914-107';
+const VERSION = '20260914-112';
 const cache = new Map();
 const state = { perfil: null, busy: false, timer: null };
 
@@ -52,11 +52,25 @@ function isoAtiva(empresa) {
   return empresa?.isoAtiva !== false;
 }
 
+function setIsoDocumentState(value = '') {
+  if (!value) {
+    delete document.documentElement.dataset.empresaIsoAtiva;
+    return;
+  }
+  document.documentElement.dataset.empresaIsoAtiva = value;
+}
+
 function ensureStyle() {
   if (document.getElementById('empresa-modulos-style')) return;
   const style = document.createElement('style');
   style.id = 'empresa-modulos-style';
   style.textContent = `
+    html[data-empresa-iso-ativa="0"] #sidebar .nav-btn[data-page="cliente-home"],
+    html[data-empresa-iso-ativa="0"] .sidebar .nav-btn[data-page="cliente-home"],
+    html[data-empresa-iso-ativa="pending"] #sidebar .nav-btn[data-page="cliente-home"],
+    html[data-empresa-iso-ativa="pending"] .sidebar .nav-btn[data-page="cliente-home"]{display:none!important}
+    html[data-empresa-iso-ativa="0"] [data-cc-area="estrutura_iso"],
+    html[data-empresa-iso-ativa="pending"] [data-cc-area="estrutura_iso"]{display:none!important}
     .empresa-module-control{margin-top:14px;border:1px solid #d7e5ea;border-radius:14px;padding:12px 13px;background:#f8fbfc;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
     .empresa-module-control strong{display:block;color:#073F5A}.empresa-module-control small{display:block;color:#607788;margin-top:3px;max-width:680px}
     .empresa-module-status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;margin-bottom:6px;background:#e4f5e9;color:#24663b}.empresa-module-status.off{background:#fce8e6;color:#992c25}
@@ -221,7 +235,7 @@ async function syncClient() {
   const empresa = await getEmpresa(state.perfil.empresaId);
   if (!empresa) return;
   const enabled = isoAtiva(empresa);
-  document.documentElement.dataset.empresaIsoAtiva = enabled ? '1' : '0';
+  setIsoDocumentState(enabled ? '1' : '0');
 
   const nav = clientIsoNavButton();
   if (nav) {
@@ -265,6 +279,8 @@ function schedule(ms = 80) {
   state.timer = setTimeout(syncAll, ms);
 }
 
+ensureStyle();
+
 document.addEventListener('click', event => {
   const toggle = event.target.closest?.('[data-toggle-empresa-iso]');
   if (toggle) {
@@ -294,11 +310,26 @@ window.addEventListener('load', () => schedule(180));
 onAuthStateChanged(auth, async user => {
   state.perfil = null;
   cache.clear();
-  if (!user) return;
+
+  if (!user) {
+    setIsoDocumentState('');
+    return;
+  }
+
+  setIsoDocumentState('pending');
+
   try {
     const snap = await getDoc(doc(db, 'usuarios', user.uid));
     state.perfil = snap.exists() ? { id: snap.id, ...snap.data() } : null;
-    schedule(120);
+
+    if (isCliente()) {
+      const empresa = await getEmpresa(state.perfil.empresaId);
+      if (empresa) setIsoDocumentState(isoAtiva(empresa) ? '1' : '0');
+    } else {
+      setIsoDocumentState('');
+    }
+
+    schedule(0);
   } catch (error) {
     console.warn('Perfil indisponível para configuração de módulos:', error);
   }
