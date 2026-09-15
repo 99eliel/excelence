@@ -2,7 +2,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import { collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const VERSION = '20260906-97';
+const VERSION = '20260914-111';
 
 const state = {
   perfil: null,
@@ -110,10 +110,22 @@ function injectStyle() {
     .cc-task-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}.cc-task-tab{border:1px solid #d4e3e8;background:#f8fbfc;border-radius:999px;padding:7px 11px;font-weight:850;color:#466572;cursor:pointer}.cc-task-tab.active{background:#073F5A;color:#fff;border-color:#073F5A}
     .cc-task-list{display:grid;gap:9px}.cc-task{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:11px;align-items:center;border:1px solid #dce8ed;border-radius:15px;padding:12px;background:#fbfdfe}.cc-task-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:#edf5f8;font-size:18px}.cc-task h3{margin:0;color:#123e50;font-size:15px}.cc-task p{margin:3px 0 0;color:#667f89;font-size:12px}.cc-action{border:0;border-radius:10px;padding:9px 11px;background:#073F5A;color:#fff;font-weight:850;cursor:pointer;white-space:nowrap}.cc-action.soft{background:#edf5f8;color:#073F5A}
     .cc-empty{border:1px dashed #c9dce4;border-radius:15px;padding:20px;text-align:center;background:#fbfdfe;color:#607788}.cc-empty strong{display:block;color:#073F5A;margin-bottom:4px}
-    .cc-modules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.cc-module{position:relative;border:1px solid #d9e6eb;border-radius:17px;padding:15px;background:#fff;cursor:pointer;text-align:left;transition:.15s ease}.cc-module:hover{transform:translateY(-1px);border-color:#8ab8c8;box-shadow:0 10px 25px rgba(7,63,90,.07)}.cc-module-icon{width:39px;height:39px;border-radius:12px;background:#edf5f8;color:#073F5A;display:grid;place-items:center;font-size:17px;margin-bottom:10px}.cc-module strong{display:block;color:#073F5A;font-size:15px}.cc-module span{display:block;color:#607788;font-size:12px;margin-top:4px;line-height:1.35}.cc-module em{position:absolute;right:12px;top:12px;font-style:normal;font-size:10px;color:#607788;background:#f2f6f8;padding:4px 7px;border-radius:999px}
+    .cc-modules{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:stretch}
+    .cc-module{position:relative;min-height:148px;border:1px solid #d9e6eb;border-radius:18px;padding:17px;background:#fff;cursor:pointer;text-align:left;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;display:flex;flex-direction:column;align-items:flex-start;overflow:hidden}
+    .cc-module:hover{transform:translateY(-2px);border-color:#8ab8c8;box-shadow:0 12px 28px rgba(7,63,90,.08)}
+    .cc-module:focus-visible{outline:3px solid rgba(11,96,127,.2);outline-offset:2px}
+    .cc-module-top{width:100%;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:13px}
+    .cc-module-icon{width:50px;height:50px;flex:0 0 50px;border-radius:15px;background:linear-gradient(145deg,#edf5f8,#e3eff3);color:#0B607F;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(7,63,90,.05)}
+    .cc-module-icon svg{width:25px;height:25px;display:block;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .cc-module-meta{font-style:normal;font-size:10px;line-height:1;font-weight:800;color:#607788;background:#f2f6f8;padding:6px 8px;border-radius:999px;white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+    .cc-module strong{display:block;color:#073F5A;font-size:15px;line-height:1.2;margin:0 0 5px}
+    .cc-module-desc{display:block;color:#607788;font-size:12px;line-height:1.4;margin:0;max-width:100%}
+    .cc-module[data-cc-area="apontamento"] .cc-module-icon{background:#fff5dc;color:#8a650d}
+    .cc-module[data-cc-area="treinamentos"] .cc-module-icon{background:#e9f6ed;color:#287043}
+    .cc-module[data-cc-area="arquivos_recebidos"] .cc-module-icon{background:#edf2fb;color:#345f93}
     .cc-footnote{margin-top:12px;color:#6b818a;font-size:11px;text-align:right}
     @media(max-width:900px){.cc-summary,.cc-modules{grid-template-columns:1fr 1fr}.cc-hero-top{flex-direction:column}.cc-profile{width:100%;min-width:0}}
-    @media(max-width:650px){.cc-root{padding:12px}.cc-summary,.cc-modules{grid-template-columns:1fr}.cc-task{grid-template-columns:40px minmax(0,1fr)}.cc-task .cc-action{grid-column:1/-1;width:100%}}
+    @media(max-width:650px){.cc-root{padding:12px}.cc-summary,.cc-modules{grid-template-columns:1fr}.cc-task{grid-template-columns:40px minmax(0,1fr)}.cc-task .cc-action{grid-column:1/-1;width:100%}.cc-module{min-height:136px}}
   `;
   document.head.appendChild(style);
 }
@@ -194,21 +206,35 @@ async function loadCentralData() {
   return result;
 }
 
+function moduleIconSVG(area) {
+  const icons = {
+    estrutura_iso: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.2"/><path d="M8.5 8h7M8.5 12h7M8.5 16h4.5"/></svg>',
+    ecossistema: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h6l2 2h9v8.5a2.5 2.5 0 0 1-2.5 2.5H6A2.5 2.5 0 0 1 3.5 18z"/><path d="M3.5 7.5V6A2.5 2.5 0 0 1 6 3.5h3.2l2 2h6.8A2.5 2.5 0 0 1 20.5 8"/></svg>',
+    arquivos_recebidos: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3.5H7A2.5 2.5 0 0 0 4.5 6v12A2.5 2.5 0 0 0 7 20.5h10A2.5 2.5 0 0 0 19.5 18V9z"/><path d="M14 3.5V9h5.5M12 11.5v5M9.8 14.4 12 16.6l2.2-2.2"/></svg>',
+    diario_bordo: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2M8 3.7v2M16 3.7v2"/></svg>',
+    apontamento: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="16" rx="2.5"/><path d="M8 3.5v3M16 3.5v3M3.5 9h17M8 13h8M8 16.5h5"/></svg>',
+    treinamentos: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 4.5-9 4.2 9 4.2 9-4.2z"/><path d="M7 11v4.2c0 1.8 2.2 3.3 5 3.3s5-1.5 5-3.3V11M21 8.7v5"/></svg>'
+  };
+  return icons[area] || '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/></svg>';
+}
+
 function moduleCards(meta = {}) {
   const defs = [
-    ['estrutura_iso','ISO','☑','Responda e acompanhe requisitos e materiais da qualidade.'],
-    ['ecossistema','Documentos','▣','Pastas, documentos e solicitações de envio da empresa.'],
-    ['arquivos_recebidos','Arquivos recebidos','◆','Materiais enviados pela consultoria para sua empresa.'],
-    ['diario_bordo','Diário de bordo','◷','Acompanhe horas contratadas, utilizadas e saldo disponível.'],
-    ['apontamento','Produção','▦','Registre os apontamentos de produção autorizados para seu usuário.'],
-    ['treinamentos','Treinamentos','▤','Acompanhe e gerencie treinamentos conforme sua permissão.']
+    ['estrutura_iso','ISO','Responda e acompanhe requisitos e materiais da qualidade.'],
+    ['ecossistema','Documentos','Pastas, documentos e solicitações de envio da empresa.'],
+    ['arquivos_recebidos','Arquivos recebidos','Materiais enviados pela consultoria para sua empresa.'],
+    ['diario_bordo','Diário de bordo','Acompanhe horas contratadas, utilizadas e saldo disponível.'],
+    ['apontamento','Produção','Registre os apontamentos de produção autorizados para seu usuário.'],
+    ['treinamentos','Treinamentos','Acompanhe e gerencie treinamentos conforme sua permissão.']
   ];
-  return defs.filter(([area]) => permitido(area)).map(([area,label,icon,desc]) => `
+  return defs.filter(([area]) => permitido(area)).map(([area,label,desc]) => `
     <button class="cc-module" type="button" data-cc-area="${area}">
-      ${meta[area] ? `<em>${esc(meta[area])}</em>` : ''}
-      <span class="cc-module-icon">${icon}</span>
+      <div class="cc-module-top">
+        <div class="cc-module-icon">${moduleIconSVG(area)}</div>
+        ${meta[area] ? `<em class="cc-module-meta">${esc(meta[area])}</em>` : ''}
+      </div>
       <strong>${esc(label)}</strong>
-      <span>${esc(desc)}</span>
+      <span class="cc-module-desc">${esc(desc)}</span>
     </button>
   `).join('');
 }
