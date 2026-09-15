@@ -78,6 +78,14 @@ service cloud.firestore {
       return temPermissao("estrutura_iso") && isoAtivaParaMinhaEmpresa();
     }
 
+    function podeLerDiagnosticoInicial(respostaId) {
+      return souCliente()
+        && (
+          respostaId == minhaEmpresa() + "_4_1"
+          || respostaId == minhaEmpresa() + "_4_2"
+        );
+    }
+
     function podeAtivarPerfilPorConvite(userId) {
       return logado()
         && request.auth.uid == userId
@@ -140,7 +148,7 @@ service cloud.firestore {
     }
 
     match /respostas_iso/{respostaId} {
-      allow get: if souAdmin() || (
+      allow get: if souAdmin() || podeLerDiagnosticoInicial(respostaId) || (
         temPermissaoIso()
         && respostaId.matches('^' + minhaEmpresa() + '_.*$')
       );
